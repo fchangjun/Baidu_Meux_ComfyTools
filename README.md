@@ -1,0 +1,2 @@
+# Comfyui_MultiSaveImage
+Comfyui CustomNode MultiSaveImage
