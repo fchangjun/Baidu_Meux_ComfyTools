@@ -36,8 +36,10 @@ class MultiSaveImage:
           }
       }
 
-  RETURN_TYPES = ("IMAGE",)
-  RETURN_NAMES = ("images",)
+#   RETURN_TYPES = ("IMAGE",)
+#   RETURN_NAMES = ("images",)
+  RETURN_TYPES = ()
+  RETURN_NAMES = ()
   FUNCTION = "save_images"
   OUTPUT_NODE = True
   CATEGORY = "image"
@@ -97,7 +99,8 @@ class MultiSaveImage:
           # 如果出现任何问题，返回第一张图像
           output_batch = all_images[0].unsqueeze(0)
       
-      return {"ui": {"images": results}, "result": (output_batch,)}
+    #   return {"ui": {"images": results}, "result": (output_batch,)}
+      return {"ui": {"images": results}}
 
   def _save_single_image(self, image, filename_prefix):
       """保存单张图像"""
