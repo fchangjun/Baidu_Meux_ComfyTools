@@ -1,13 +1,16 @@
 # 从 node.py 文件导入节点类
 from .node import MultiSaveImage
+from .node import SimpleLLMNode
 
 
 NODE_CLASS_MAPPINGS = {
-  "MultiSaveImage": MultiSaveImage
+  "MultiSaveImage": MultiSaveImage,
+  "SimpleLLMNode": SimpleLLMNode,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-  "MultiSaveImage": "Multi Save Image"
+  "MultiSaveImage": "Multi Save Image",
+  "SimpleLLMNode": "🤖 LLM API调用",
 }
 # NODE_CLASS_MAPPINGS = {
 #   "PracticalBatchImageCollector": PracticalBatchImageCollector,
