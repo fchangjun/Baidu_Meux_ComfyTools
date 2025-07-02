@@ -218,8 +218,9 @@ class SimpleLLMNode:
               }),
               "user_prompt": ("STRING", {
                 #   "default": "Hello, how are you?",
-                  "multiline": True,
-                  "placeholder": "输入你的问题或提示"
+                #   "multiline": True,
+                #   "placeholder": "输入你的问题或提示"
+                "forceInput": True
               }),
               "temperature": ("FLOAT", {
                   "default": 0.7,
