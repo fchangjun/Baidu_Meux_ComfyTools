@@ -238,8 +238,9 @@ class SimpleLLMNode:
           "optional": {
               "system_prompt": ("STRING", {
                 #   "default": "You are a helpful assistant.",
-                  "multiline": True,
-                  "placeholder": "输入系统提示词（可选）"
+                #   "multiline": True,
+                #   "placeholder": "输入系统提示词（可选）"
+                "forceInput": True
               }),
               "api_url": ("STRING", {
                   "default": "https://api.siliconflow.cn/v1/chat/completions",
