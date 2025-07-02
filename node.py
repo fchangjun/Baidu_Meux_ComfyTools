@@ -217,7 +217,7 @@ class SimpleLLMNode:
                   "placeholder": "例如: Qwen/Qwen2.5-72B-Instruct"
               }),
               "user_prompt": ("STRING", {
-                  "default": "Hello, how are you?",
+                #   "default": "Hello, how are you?",
                   "multiline": True,
                   "placeholder": "输入你的问题或提示"
               }),
@@ -237,7 +237,7 @@ class SimpleLLMNode:
           },
           "optional": {
               "system_prompt": ("STRING", {
-                  "default": "You are a helpful assistant.",
+                #   "default": "You are a helpful assistant.",
                   "multiline": True,
                   "placeholder": "输入系统提示词（可选）"
               }),
