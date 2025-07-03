@@ -32,6 +32,14 @@ class MultiSaveImage:
                 "images_6": ("IMAGE",),
                 "images_7": ("IMAGE",),
                 "images_8": ("IMAGE",),
+                "images_9": ("IMAGE",),
+                "images_10": ("IMAGE",),
+                "images_11": ("IMAGE",),
+                "images_12": ("IMAGE",),
+                "images_13": ("IMAGE",),
+                "images_14": ("IMAGE",),
+                "images_15": ("IMAGE",),
+                "images_16": ("IMAGE",),
                 "save_individually": ("BOOLEAN", {"default": False}),
                 "resize_to_same": ("BOOLEAN", {"default": False}),
                 "target_width": ("INT", {"default": 512, "min": 64, "max": 8192}),
@@ -84,6 +92,8 @@ class MultiSaveImage:
 
     def save_images(self, images_1, filename_prefix="ComfyUI", images_2=None, images_3=None, 
                    images_4=None, images_5=None, images_6=None, images_7=None, images_8=None,
+                   images_9=None, images_10=None, images_11=None, images_12=None, 
+                   images_13=None, images_14=None, images_15=None, images_16=None,
                    save_individually=False, resize_to_same=False, target_width=512, target_height=512):
         
         # 消毒文件名前缀
@@ -91,7 +101,8 @@ class MultiSaveImage:
         
         # 收集所有非空的图像输入
         all_images = []
-        image_inputs = [images_1, images_2, images_3, images_4, images_5, images_6, images_7, images_8]
+        image_inputs = image_inputs = [images_1, images_2, images_3, images_4, images_5, images_6, images_7, images_8,
+                images_9, images_10, images_11, images_12, images_13, images_14, images_15, images_16]
         
         for img_batch in image_inputs:
             if img_batch is not None:
