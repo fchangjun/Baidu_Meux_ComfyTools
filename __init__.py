@@ -1,16 +1,19 @@
-# 从 node.py 文件导入节点类
-from .node import MultiSaveImage
-from .node import SimpleLLMNode
+# 从 nodes 模块导入节点类
+from .nodes.multi_save_image import MultiSaveImage
+from .nodes.simple_llm_node import SimpleLLMNode
+from .nodes.advanced_image_crop import AdvancedImageCrop
 
 
 NODE_CLASS_MAPPINGS = {
   "MultiSaveImage": MultiSaveImage,
   "SimpleLLMNode": SimpleLLMNode,
+  "Baidu_AdvancedImageCrop": AdvancedImageCrop,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
   "MultiSaveImage": "Multi Save Image",
   "SimpleLLMNode": "🤖 LLM API调用",
+  "Baidu_AdvancedImageCrop": "Baidu_AdvancedImageCrop",
 }
 # NODE_CLASS_MAPPINGS = {
 #   "PracticalBatchImageCollector": PracticalBatchImageCollector,
@@ -22,7 +25,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 #   "FlexibleBatchImageCollector": "灵活批量图片收集器",
 # }
 # 可选：添加版本和作者信息
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Your Name"
 
 # 调试信息 - 可以帮助确认导入是否成功

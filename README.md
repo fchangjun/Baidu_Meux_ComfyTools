@@ -1,89 +1,100 @@
-# MultiSaveImage Node for ComfyUI
+# ComfyUI Multi Save Toolkit
 
 [English](#english) | [中文](#中文)
+
+---
 
 ## English
 
 ### Overview
 
-MultiSaveImage is a custom node for ComfyUI that allows you to save multiple image inputs simultaneously with advanced features like batch processing, resizing, and flexible naming conventions.
+ComfyUI Multi Save Toolkit is a collection of custom nodes that streamline common workflow chores in ComfyUI.  
+Current version: **1.1.0**
 
-### Features
+- `MultiSaveImage`: save up to sixteen image batches with optional resizing.
+- `AdvancedImageCrop`: crop images by pixels or percentage with optional grid alignment.
+- `SimpleLLMNode`: call an external chat-completions style LLM API directly inside a workflow.
 
-- **Multiple Image Inputs**: Support up to 8 different image inputs in a single node
-- **Batch Processing**: Handle multiple images in each input slot
-- **Automatic Resizing**: Option to resize all images to the same dimensions
-- **Flexible Naming**: Customizable filename prefix with automatic numbering
-- **Format Support**: Supports RGB, RGBA, and grayscale images
-- **Collision Prevention**: Automatic filename collision detection and resolution
+The package now uses a modular `nodes/` directory so each node is easy to maintain and extend.
 
-### Installation
+### Changelog
 
-1. Clone or download this repository to your ComfyUI custom nodes directory:
- ```bash
- cd ComfyUI/custom_nodes/
- git clone https://github.com/yourusername/comfyui-multi-save-image.git
- ```
+- **v1.1.0**
+  - Restructured package into modular node files under `nodes/`.
+  - Added `AdvancedImageCrop` and `SimpleLLMNode` registrations to the public export.
+  - Updated documentation with usage guides for every node.
+- **v1.0.0**
+  - Initial release with the `MultiSaveImage` node.
 
-2. Restart ComfyUI
+### Installation / Update
 
-3. The MultiSaveImage node will appear in the "image" category
+1. Clone or download into your ComfyUI custom node folder:
 
-### Usage
+   ```bash
+   cd ComfyUI/custom_nodes/
+   git clone https://github.com/yourusername/comfyui-multi-save-image.git
+   ```
 
-#### Input Parameters
+2. For updates, pull the latest changes:
 
-**Required:**
-- `images_1`: The primary image input (required)
-- `filename_prefix`: Base name for saved files (default: "ComfyUI")
+   ```bash
+   cd ComfyUI/custom_nodes/comfyui-multi-save-image
+   git pull
+   ```
 
-**Optional:**
-- `images_2` to `images_8`: Additional image inputs
-- `save_individually`: Save each image separately (default: False)
-- `resize_to_same`: Resize all images to the same dimensions (default: False)
-- `target_width`: Target width for resizing (default: 512, range: 64-8192)
-- `target_height`: Target height for resizing (default: 512, range: 64-8192)
+3. Restart ComfyUI. The nodes appear under the `image`, `Image/Transform`, and `LLM` categories.
 
-#### Example Workflow
+### Usage Tutorial
 
-1. Connect your image sources to the `images_1` through `images_8` inputs
-2. Set your desired `filename_prefix`
-3. Enable `resize_to_same` if you want all images to have uniform dimensions
-4. Set `target_width` and `target_height` if resizing is enabled
-5. Execute the node to save all images
+#### MultiSaveImage
 
-### Output
+1. Connect one or more `IMAGE` tensors to `images_1` … `images_16`. Batches are split automatically.
+2. Set `filename_prefix` (unsafe characters are cleaned automatically).
+3. Optional toggles:
+   - `save_individually`: keep the sequential counter for each input image.
+   - `resize_to_same`: rescale every image to `target_width` × `target_height` using Lanczos.
+4. Run the node. Images are written to the ComfyUI output directory as  
+   `prefix_{slotIndex:03d}_{counter:05d}.png`, and UI metadata is returned for gallery preview.
 
-- Images are saved to the ComfyUI output directory
-- Filenames follow the pattern: `{prefix}_{sequential_number:03d}_{unique_id:05d}.png`
-- The node returns UI information about saved images
+#### AdvancedImageCrop
 
-### Technical Details
+1. Feed an `IMAGE` tensor into `image`.
+2. Choose `measurement` mode:
+   - `Pixels`: specify absolute crop margins.
+   - `Percentage`: margins are interpreted relative to current width/height.
+3. Optionally snap the crop window by setting `align_to` to `8` or `16`.
+4. Execute to obtain the cropped tensor (with console logging of the crop result).
 
-- **Image Format**: PNG with compression level 4
-- **Color Spaces**: RGB, RGBA, and grayscale support
-- **Tensor Handling**: Automatic conversion between PyTorch tensors and PIL Images
-- **Memory Efficient**: Processes images individually to minimize memory usage
-- **Resizing Algorithm**: Uses Lanczos interpolation for high-quality resizing
+#### SimpleLLMNode
+
+1. Provide your API key and endpoint (`api_url` defaults to siliconflow chat completions).
+2. Set the `model` identifier supported by your provider.
+3. Enter the `user_prompt`; optionally supply a `system_prompt` and sampling parameters (`temperature`, `top_p`, `top_k`, penalties).
+4. Run the node. The main output is the assistant message, along with the full JSON payload and token usage.
+
+### Folder Structure
+
+```
+Comfyui_MultiSaveImage/
+├── __init__.py          # Registers all exposed nodes
+└── nodes/
+    ├── advanced_image_crop.py
+    ├── multi_save_image.py
+    └── simple_llm_node.py
+```
 
 ### Requirements
 
 - ComfyUI
 - PyTorch
-- PIL (Pillow)
+- Pillow
 - NumPy
+- Requests (for `SimpleLLMNode`)
 
-### License
+### License & Support
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-### Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Issues
-
-If you encounter any issues, please report them on the [GitHub Issues](https://github.com/yourusername/comfyui-multi-save-image/issues) page.
+Licensed under the MIT License.  
+Issues and feature requests: [GitHub Issues](https://github.com/yourusername/comfyui-multi-save-image/issues).
 
 ---
 
@@ -91,81 +102,92 @@ If you encounter any issues, please report them on the [GitHub Issues](https://g
 
 ### 概述
 
-MultiSaveImage 是 ComfyUI 的自定义节点，允许您同时保存多个图像输入，具有批处理、调整大小和灵活命名约定等高级功能。
+ComfyUI Multi Save Toolkit 是一组帮助简化 ComfyUI 工作流的自定义节点。  
+当前版本：**1.1.0**
 
-### 功能特性
+- `MultiSaveImage`：一次保存最多 16 组图像，支持可选统一尺寸。
+- `AdvancedImageCrop`：按像素或百分比裁剪，可选择 8/16 像素对齐。
+- `SimpleLLMNode`：在工作流中调用外部 LLM Chat Completion 接口。
 
-- **多图像输入**：单个节点支持多达8个不同的图像输入
-- **批处理**：每个输入槽可处理多张图像
-- **自动调整大小**：可选择将所有图像调整为相同尺寸
-- **灵活命名**：可自定义文件名前缀，自动编号
-- **格式支持**：支持RGB、RGBA和灰度图像
-- **冲突防护**：自动检测和解决文件名冲突
+项目已改用模块化的 `nodes/` 目录，便于后续维护与扩展。
 
-### 安装
+### 更新日志
 
-1. 将此仓库克隆或下载到您的 ComfyUI 自定义节点目录：
- ```bash
- cd ComfyUI/custom_nodes/
- git clone https://github.com/yourusername/comfyui-multi-save-image.git
- ```
+- **v1.1.0**
+  - 重构包结构至 `nodes/` 子目录。
+  - 注册 `AdvancedImageCrop` 与 `SimpleLLMNode` 节点。
+  - 文档新增全部节点的使用教程。
+- **v1.0.0**
+  - 发布 `MultiSaveImage` 节点初版。
 
-2. 重启 ComfyUI
+### 安装 / 更新
 
-3. MultiSaveImage 节点将出现在"image"类别中
+1. 克隆或下载到 ComfyUI 自定义节点目录：
 
-### 使用方法
+   ```bash
+   cd ComfyUI/custom_nodes/
+   git clone https://github.com/yourusername/comfyui-multi-save-image.git
+   ```
 
-#### 输入参数
+2. 更新时执行：
 
-**必需参数：**
-- `images_1`：主要图像输入（必需）
-- `filename_prefix`：保存文件的基础名称（默认："ComfyUI"）
+   ```bash
+   cd ComfyUI/custom_nodes/comfyui-multi-save-image
+   git pull
+   ```
 
-**可选参数：**
-- `images_2` 到 `images_8`：额外的图像输入
-- `save_individually`：单独保存每张图像（默认：False）
-- `resize_to_same`：将所有图像调整为相同尺寸（默认：False）
-- `target_width`：调整大小的目标宽度（默认：512，范围：64-8192）
-- `target_height`：调整大小的目标高度（默认：512，范围：64-8192）
+3. 重启 ComfyUI，节点将出现在 `image`、`Image/Transform` 与 `LLM` 分类下。
 
-#### 示例工作流
+### 使用教程
 
-1. 将图像源连接到 `images_1` 到 `images_8` 输入
-2. 设置所需的 `filename_prefix`
-3. 如果希望所有图像具有统一尺寸，启用 `resize_to_same`
-4. 如果启用了调整大小，设置 `target_width` 和 `target_height`
-5. 执行节点以保存所有图像
+#### MultiSaveImage
 
-### 输出
+1. 将一张或多张 `IMAGE` 张量连接到 `images_1` … `images_16`，批次会自动拆分。
+2. 设置 `filename_prefix`（系统会自动清理危险字符）。
+3. 可选项：
+   - `save_individually`：为每张图单独编号。
+   - `resize_to_same`：按 `target_width` × `target_height` 使用 Lanczos 算法统一尺寸。
+4. 运行后，图像保存到 ComfyUI 输出目录，命名格式  
+   `前缀_{输入序号:03d}_{计数:05d}.png`，同时返回 UI 预览信息。
 
-- 图像保存到 ComfyUI 输出目录
-- 文件名遵循模式：`{前缀}_{序号:03d}_{唯一ID:05d}.png`
-- 节点返回已保存图像的UI信息
+#### AdvancedImageCrop
 
-### 技术细节
+1. 将 `IMAGE` 张量接入 `image`。
+2. 选择 `measurement` 模式：
+   - `Pixels`：输入像素裁剪边距。
+   - `Percentage`：边距按当前宽/高的百分比计算。
+3. 如需像素对齐，将 `align_to` 设为 `8` 或 `16`。
+4. 运行节点即可得到裁剪后的图像，并在控制台查看裁剪日志。
 
-- **图像格式**：PNG，压缩级别4
-- **色彩空间**：支持RGB、RGBA和灰度
-- **张量处理**：PyTorch张量和PIL图像之间的自动转换
-- **内存高效**：逐个处理图像以最小化内存使用
-- **调整大小算法**：使用Lanczos插值进行高质量调整
+#### SimpleLLMNode
 
-### 依赖要求
+1. 输入可用的 API Key 和接口地址（默认指向 siliconflow chat completions）。
+2. 设置服务商支持的 `model` 名称。
+3. 填写 `user_prompt`；根据需要添加 `system_prompt` 和采样参数（`temperature`、`top_p`、`top_k`、惩罚项）。
+4. 执行节点将返回：
+   - 主输出：模型回复文本；
+   - 附加输出：完整 JSON 响应与消耗的 token 数。
+
+### 目录结构
+
+```
+Comfyui_MultiSaveImage/
+├── __init__.py          # 节点入口注册
+└── nodes/
+    ├── advanced_image_crop.py
+    ├── multi_save_image.py
+    └── simple_llm_node.py
+```
+
+### 依赖
 
 - ComfyUI
 - PyTorch
-- PIL (Pillow)
+- Pillow
 - NumPy
+- Requests（供 `SimpleLLMNode` 调用 HTTP 接口）
 
-### 许可证
+### 许可证与支持
 
-本项目采用 MIT 许可证 - 详情请参阅 LICENSE 文件。
-
-### 贡献
-
-欢迎贡献！请随时提交 Pull Request。
-
-### 问题反馈
-
-如果遇到任何问题，请在 [GitHub Issues](https://github.com/yourusername/comfyui-multi-save-image/issues) 页面报告。
+采用 MIT 许可证。  
+问题反馈与功能建议： [GitHub Issues](https://github.com/yourusername/comfyui-multi-save-image/issues)。
