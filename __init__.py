@@ -5,15 +5,15 @@ from .nodes.advanced_image_crop import AdvancedImageCrop
 
 
 NODE_CLASS_MAPPINGS = {
-  "MultiSaveImage": MultiSaveImage,
-  "SimpleLLMNode": SimpleLLMNode,
-  "Baidu_AdvancedImageCrop": AdvancedImageCrop,
+  "MeuxMultiSaveImage": MultiSaveImage,
+  "MeuxSimpleLLMNode": SimpleLLMNode,
+  "MeuxAdvancedImageCrop": AdvancedImageCrop,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-  "MultiSaveImage": "Multi Save Image",
-  "SimpleLLMNode": "🤖 LLM API调用",
-  "Baidu_AdvancedImageCrop": "Baidu_AdvancedImageCrop",
+  "MeuxMultiSaveImage": "Meux Multi Save Image",
+  "MeuxSimpleLLMNode": "Meux LLM API调用",
+  "MeuxAdvancedImageCrop": "Meux Advanced Image Crop",
 }
 # NODE_CLASS_MAPPINGS = {
 #   "PracticalBatchImageCollector": PracticalBatchImageCollector,
