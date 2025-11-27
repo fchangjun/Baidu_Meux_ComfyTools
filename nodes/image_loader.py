@@ -24,18 +24,23 @@ class ImageLoader:
 
     @classmethod
     def INPUT_TYPES(cls):
-        # Gracefully handle cases where ComfyUI hasn't registered the input folder (avoids KeyError).
+        # Mirror native Load Image: list input dir manually and filter to images.
         try:
-            input_files = folder_paths.get_filename_list("input")
-        except KeyError:
-            print("[MeuxImageLoader] WARN: 'input' folder not registered in folder_paths; local picker disabled.")
-            input_files = []
+            input_dir = folder_paths.get_input_directory()
+            files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+            if hasattr(folder_paths, "filter_files_content_types"):
+                files = folder_paths.filter_files_content_types(files, ["image"])
+            input_files = sorted(files) or [""]
+        except Exception:
+            print("[MeuxImageLoader] WARN: 无法访问 input 目录，本地文件选择已禁用。")
+            input_files = [""]
         return {
             "required": {
                 "source_type": (["local", "url"], {"default": "local"}),
-                "image": (input_files, {"default": ""}),
             },
             "optional": {
+                # Optional so URL模式下不再触发“必填缺失”校验
+                "image": (input_files, {"default": ""}),
                 "image_url": ("STRING", {"default": ""}),
                 "filename_hint": ("STRING", {"default": ""}),
                 "persist_to_input": ("BOOLEAN", {"default": True}),
