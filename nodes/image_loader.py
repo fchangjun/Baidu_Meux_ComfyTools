@@ -24,7 +24,12 @@ class ImageLoader:
 
     @classmethod
     def INPUT_TYPES(cls):
-        input_files = folder_paths.get_filename_list("input")
+        # Gracefully handle cases where ComfyUI hasn't registered the input folder (avoids KeyError).
+        try:
+            input_files = folder_paths.get_filename_list("input")
+        except KeyError:
+            print("[MeuxImageLoader] WARN: 'input' folder not registered in folder_paths; local picker disabled.")
+            input_files = []
         return {
             "required": {
                 "source_type": (["local", "url"], {"default": "local"}),
@@ -79,7 +84,10 @@ class ImageLoader:
         if not image_name:
             raise ValueError("未指定要加载的本地图片文件。")
 
-        input_dir = folder_paths.get_input_directory()
+        try:
+            input_dir = folder_paths.get_input_directory()
+        except KeyError:
+            raise ValueError("未检测到 ComfyUI 的 input 目录，请在根目录创建 input 文件夹后重启。")
         full_path = os.path.abspath(os.path.join(input_dir, image_name))
         if not (full_path.startswith(os.path.abspath(input_dir) + os.sep) or full_path == os.path.abspath(input_dir)):
             raise ValueError("无效的图片路径。")
@@ -153,7 +161,10 @@ class ImageLoader:
         return mask
 
     def _persist_image(self, image: Image.Image, filename_hint: str, url: str, overwrite: bool):
-        input_dir = folder_paths.get_input_directory()
+        try:
+            input_dir = folder_paths.get_input_directory()
+        except KeyError:
+            raise ValueError("未检测到 ComfyUI 的 input 目录，请在根目录创建 input 文件夹后重启。")
 
         extension = self._infer_extension(image, url)
         filename = self._build_filename(filename_hint or os.path.basename(urlparse(url).path), extension, url)
