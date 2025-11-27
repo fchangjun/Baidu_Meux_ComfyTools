@@ -39,8 +39,8 @@ class ImageLoader:
                 "source_type": (["local", "url"], {"default": "local"}),
             },
             "optional": {
-                # Optional so URL模式下不再触发“必填缺失”校验
-                "image": (input_files, {"default": ""}),
+                # Optional so URL模式下不再触发“必填缺失”校验；允许直接上传文件
+                "image": (input_files, {"default": "", "image_upload": True}),
                 "image_url": ("STRING", {"default": ""}),
                 "filename_hint": ("STRING", {"default": ""}),
                 "persist_to_input": ("BOOLEAN", {"default": True}),
@@ -50,6 +50,17 @@ class ImageLoader:
                 "verify_ssl": ("BOOLEAN", {"default": True}),
             },
         }
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, source_type, image=None, image_url="", **kwargs):
+        # Enforce mutually exclusive requirements for clarity.
+        if source_type == "local":
+            if not image:
+                return "请选择本地图片文件。"
+        elif source_type == "url":
+            if not image_url.strip():
+                return "请输入有效的图片 URL。"
+        return True
 
     def load_image(
         self,
@@ -124,8 +135,11 @@ class ImageLoader:
                     raise ValueError(f"图片超过限制：{max_bytes / (1024 * 1024):.1f} MB")
 
         buffer.seek(0)
-        image = Image.open(buffer)
+        raw_bytes = buffer.getvalue()
+        image = Image.open(io.BytesIO(raw_bytes))
         image = ImageOps.exif_transpose(image)
+        # Keep original bytes so persistence can avoid recompressing (preserves file size/quality).
+        image._meux_raw_bytes = raw_bytes
         return image
 
     def _pil_to_tensors(self, image: Image.Image):
@@ -189,7 +203,12 @@ class ImageLoader:
                     break
                 counter += 1
 
-        image.save(full_path)
+        raw_bytes = getattr(image, "_meux_raw_bytes", None)
+        if raw_bytes is not None:
+            with open(full_path, "wb") as f:
+                f.write(raw_bytes)
+        else:
+            image.save(full_path)
         print(f"[MeuxImageLoader] 已保存到 {os.path.relpath(full_path, input_dir)}")
 
     def _build_filename(self, hint: str, extension: str, url: str) -> str:
