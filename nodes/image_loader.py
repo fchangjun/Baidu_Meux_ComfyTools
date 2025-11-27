@@ -37,10 +37,10 @@ class ImageLoader:
         return {
             "required": {
                 "source_type": (["local", "url"], {"default": "local"}),
+                # 设为必填以确保上传按钮显示，同时默认值为空字符串，配合 VALIDATE_INPUTS 控制模式校验
+                "image": (input_files, {"default": "", "image_upload": True}),
             },
             "optional": {
-                # Optional so URL模式下不再触发“必填缺失”校验；允许直接上传文件
-                "image": (input_files, {"default": "", "image_upload": True}),
                 "image_url": ("STRING", {"default": ""}),
                 "filename_hint": ("STRING", {"default": ""}),
                 "persist_to_input": ("BOOLEAN", {"default": True}),
@@ -55,7 +55,7 @@ class ImageLoader:
     def VALIDATE_INPUTS(cls, source_type, image=None, image_url="", **kwargs):
         # Enforce mutually exclusive requirements for clarity.
         if source_type == "local":
-            if not image:
+            if not image or str(image).strip() == "":
                 return "请选择本地图片文件。"
         elif source_type == "url":
             if not image_url.strip():
