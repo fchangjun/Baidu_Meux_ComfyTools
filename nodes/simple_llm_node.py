@@ -14,6 +14,11 @@ class SimpleLLMNode:
         pass
 
     @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        # Force execution even when inputs stay the same so each run triggers a fresh API call.
+        return str(time.time_ns())
+
+    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
