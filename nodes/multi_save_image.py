@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 import torch
 from PIL import Image
@@ -18,6 +19,11 @@ class MultiSaveImage:
         self.type = "output"
         self.prefix_append = ""
         self.compress_level = 4
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        # Force execution every queue, even when upstream inputs (e.g., prompt) stay the same.
+        return str(time.time_ns())
 
     @classmethod
     def INPUT_TYPES(cls):

@@ -3,6 +3,7 @@ from .nodes.multi_save_image import MultiSaveImage
 from .nodes.simple_llm_node import SimpleLLMNode
 from .nodes.advanced_image_crop import AdvancedImageCrop
 from .nodes.image_loader import ImageLoader
+from .nodes.text_area_input import TextAreaInput
 
 
 NODE_CLASS_MAPPINGS = {
@@ -10,6 +11,7 @@ NODE_CLASS_MAPPINGS = {
   "MeuxMultiSaveImage": MultiSaveImage,
   "MeuxSimpleLLMNode": SimpleLLMNode,
   "MeuxAdvancedImageCrop": AdvancedImageCrop,
+  "MeuxTextAreaInput": TextAreaInput,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -17,6 +19,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxMultiSaveImage": "Meux Multi Save Image",
   "MeuxSimpleLLMNode": "Meux LLM API Call",
   "MeuxAdvancedImageCrop": "Meux Advanced Image Crop",
+  "MeuxTextAreaInput": "Meux Text Area",
 }
 
 # 可选：添加版本和作者信息
