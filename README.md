@@ -15,11 +15,16 @@ Current version: **1.2.0**
 - `MeuxAdvancedImageCrop`: crop images by pixels or percentage with optional grid alignment.
 - `MeuxSimpleLLMNode`: call an external chat-completions style LLM API directly inside a workflow.
 - `MeuxImageLoader`: drop-in replacement for ComfyUI's Load Image node with optional HTTP/HTTPS downloading and persistence to the input folder.
+- `MeuxTextAreaInput`: multi-line text input node that outputs the entered string.
+  - Always executes on each queue run (cache-bypass) so images are saved even if upstream prompts are unchanged.
 
 The package now uses a modular `nodes/` directory so each node is easy to maintain and extend.
 
 ### Changelog
 
+- **v1.2.x**
+  - `MeuxMultiSaveImage` now always re-runs per queue (cache-bypass) to ensure outputs are saved.
+  - Added `MeuxTextAreaInput` for entering multi-line text in workflows.
 - **v1.2.0**
   - Introduced `MeuxImageLoader`, a drop-in replacement for ComfyUI's Load Image with URL downloading.
 - **v1.1.0**
@@ -68,8 +73,8 @@ The package now uses a modular `nodes/` directory so each node is easy to mainta
 3. Optional toggles:
    - `save_individually`: keep the sequential counter for each input image.
    - `resize_to_same`: rescale every image to `target_width` × `target_height` using Lanczos.
-4. Run the node. Images are written to the ComfyUI output directory as  
-   `prefix_{slotIndex:03d}_{counter:05d}.png`, and UI metadata is returned for gallery preview.
+4. Runs every queue execution (cache-bypass) to ensure files are saved even if upstream inputs don't change.
+5. Images are written to the ComfyUI output directory as `prefix_{slotIndex:03d}_{counter:05d}.png`, and UI metadata is returned for gallery preview.
 
 #### MeuxAdvancedImageCrop
 
@@ -87,6 +92,12 @@ The package now uses a modular `nodes/` directory so each node is easy to mainta
 3. Enter the `user_prompt`; optionally supply a `system_prompt` and sampling parameters (`temperature`, `top_p`, `top_k`, penalties).
 4. Run the node. The main output is the assistant message, along with the full JSON payload and token usage.
 
+#### MeuxTextAreaInput
+
+1. Drag the node from the `text` category.
+2. Type or paste multi-line content in the provided text area.
+3. The `text` output emits exactly what you entered, ready to feed downstream nodes.
+
 ### Folder Structure
 
 ```
@@ -96,7 +107,8 @@ Baidu_Meux_ComfyTools/
     ├── image_loader.py
     ├── advanced_image_crop.py
     ├── multi_save_image.py
-    └── simple_llm_node.py
+    ├── simple_llm_node.py
+    └── text_area_input.py
 ```
 
 ### Requirements
@@ -125,11 +137,14 @@ Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 Com
 - `MeuxAdvancedImageCrop`：按像素或百分比裁剪，可选择 8/16 像素对齐。
 - `MeuxSimpleLLMNode`：在工作流中调用外部 LLM Chat Completion 接口。
 - `MeuxImageLoader`：兼容本地/URL 两种来源，可选写入 input 目录，完全替换原生 Load Image 节点。
+- `MeuxTextAreaInput`：提供多行文本输入并直接输出字符串。
 
 项目已改用模块化的 `nodes/` 目录，便于后续维护与扩展。
 
 ### 更新日志
 
+- **v1.2.x**
+  - 新增 `MeuxTextAreaInput`，用于在工作流中输入多行文本。
 - **v1.2.0**
   - 新增 `MeuxImageLoader`，支持 URL 下载、可完全替换原生 Load Image。
 - **v1.1.0**
@@ -199,6 +214,12 @@ Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 Com
    - 主输出：模型回复文本；
    - 附加输出：完整 JSON 响应与消耗的 token 数。
 
+#### MeuxTextAreaInput
+
+1. 在 `text` 分类下拖入节点。
+2. 在多行输入框中输入或粘贴文本。
+3. `text` 输出会原样输出输入内容，可直接传递给下游节点。
+
 ### 目录结构
 
 ```
@@ -208,7 +229,8 @@ Baidu_Meux_ComfyTools/
     ├── image_loader.py
     ├── advanced_image_crop.py
     ├── multi_save_image.py
-    └── simple_llm_node.py
+    ├── simple_llm_node.py
+    └── text_area_input.py
 ```
 
 ### 依赖
