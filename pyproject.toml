@@ -1,7 +1,7 @@
 [project]
-name = "multisaveimage"
-description = "A custom node for saving multiple images simultaneously with batch processing and resizing capabilities."
-version = "1.0.0"
+name = "Baidu Meux ComfyTools"
+description = "Baidu Meux ComfyTools is a collection of custom nodes that streamline common workflow chores in ComfyUI for the Baidu Meux asset platform.."
+version = "1.2.0"
 license = {file = "LICENSE"} 
 # classifiers = [
 #     # For OS-independent nodes (works on all operating systems)
@@ -28,8 +28,8 @@ Documentation = "https://github.com/fchangjun/Comfyui_MultiSaveImage/wiki"
 "Bug Tracker" = "https://github.com/fchangjun/Comfyui_MultiSaveImage/issues"
 
 [tool.comfy]
-PublisherId = ""
-DisplayName = "Comfyui_MultiSaveImage"
+PublisherId = "fchangjun"
+DisplayName = "Baidu Meux ComfyTools"
 Icon = ""
 includes = [] 
 # "requires-comfyui" = ">=1.0.0"  # ComfyUI version compatibility
