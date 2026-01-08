@@ -28,7 +28,7 @@ Documentation = "https://github.com/fchangjun/Comfyui_MultiSaveImage/wiki"
 "Bug Tracker" = "https://github.com/fchangjun/Comfyui_MultiSaveImage/issues"
 
 [tool.comfy]
-PublisherId = "fchangjun"
+PublisherId = "fangchangjun"
 DisplayName = "Baidu Meux ComfyTools"
 Icon = ""
 includes = [] 
