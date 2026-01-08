@@ -4,7 +4,8 @@ from .nodes.simple_llm_node import SimpleLLMNode
 from .nodes.advanced_image_crop import AdvancedImageCrop
 from .nodes.image_loader import ImageLoader
 from .nodes.text_area_input import TextAreaInput
-
+from .nodes.smart_empty_latent import SmartEmptyLatent
+from .nodes.size_preset_safe import SizePresetSafe
 
 NODE_CLASS_MAPPINGS = {
   "MeuxImageLoader": ImageLoader,
@@ -12,6 +13,8 @@ NODE_CLASS_MAPPINGS = {
   "MeuxSimpleLLMNode": SimpleLLMNode,
   "MeuxAdvancedImageCrop": AdvancedImageCrop,
   "MeuxTextAreaInput": TextAreaInput,
+  "MeuxSmartEmptyLatent": SmartEmptyLatent,
+  "MeuxSizePresetSafe": SizePresetSafe
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -20,6 +23,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxSimpleLLMNode": "Meux LLM API Call",
   "MeuxAdvancedImageCrop": "Meux Advanced Image Crop",
   "MeuxTextAreaInput": "Meux Text Area",
+  "MeuxSmartEmptyLatent": " meux latent size node",
+  "MeuxSizePresetSafe": " meux size Preset node"
+
 }
 
 # 可选：添加版本和作者信息
