@@ -1,5 +1,5 @@
 [project]
-name = "Baidu Meux ComfyTools"
+name = "baidu_meux_comfy_tools"
 description = "Baidu Meux ComfyTools is a collection of custom nodes that streamline common workflow chores in ComfyUI for the Baidu Meux asset platform.."
 version = "1.2.0"
 license = {file = "LICENSE"} 
