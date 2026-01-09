@@ -9,17 +9,22 @@
 ### Overview
 
 Baidu Meux ComfyTools is a collection of custom nodes that streamline common workflow chores in ComfyUI for the Baidu Meux asset platform.  
-Current version: **1.2.0**
+Current version: **1.3.0**
 
 - `MeuxMultiSaveImage`: save up to sixteen image batches with optional resizing.
 - `MeuxAdvancedImageCrop`: crop images by pixels or percentage with optional grid alignment.
 - `MeuxSimpleLLMNode`: call an external chat-completions style LLM API directly inside a workflow.
 - `MeuxImageLoader`: drop-in replacement for ComfyUI's Load Image node with optional HTTP/HTTPS downloading and persistence to the input folder.
+- `MeuxSmartEmptyLatent`: generate a safe-sized empty latent tensor based on target size alignment.
+- `MeuxSizePresetSafe`: compute safe generation size and return size metadata for downstream nodes.
+- `MeuxSmartExactResize`: smart crop/pad to exact target size with auto mode and padding options.
 
 The package now uses a modular `nodes/` directory so each node is easy to maintain and extend.
 
 ### Changelog
 
+- **v1.3.0**
+  - Added `MeuxSmartEmptyLatent`, `MeuxSizePresetSafe`, and `MeuxSmartExactResize`.
 - **v1.2.0**
   - Introduced `MeuxImageLoader`, a drop-in replacement for ComfyUI's Load Image with URL downloading.
 - **v1.1.0**
@@ -87,6 +92,26 @@ The package now uses a modular `nodes/` directory so each node is easy to mainta
 3. Enter the `user_prompt`; optionally supply a `system_prompt` and sampling parameters (`temperature`, `top_p`, `top_k`, penalties).
 4. Run the node. The main output is the assistant message, along with the full JSON payload and token usage.
 
+#### MeuxSmartEmptyLatent
+
+1. Set `target_width`, `target_height`, and `batch_size`.
+2. Choose `align` (8 or 64). The node rounds up to a safe generation size.
+3. Run the node to output an empty `LATENT` plus `gen_width` and `gen_height`.
+
+#### MeuxSizePresetSafe
+
+1. Set `target_width`, `target_height`, and `batch_size`.
+2. Choose `align` (8 or 64). The node rounds up to a safe generation size.
+3. Run the node to output `gen_width`, `gen_height`, and the input size metadata.
+
+#### MeuxSmartExactResize
+
+1. Feed an `IMAGE` tensor into `image`.
+2. Set `target_width` and `target_height`.
+3. Choose `mode`: `auto`, `crop_only`, or `pad_only`.
+4. Optional: `anchor` for cropping, `safe_margin_percent` for auto crop safety, and `padding_mode` for padding style.
+5. Run the node to output a resized image with exact target dimensions.
+
 ### Folder Structure
 
 ```
@@ -96,7 +121,10 @@ Baidu_Meux_ComfyTools/
     ├── image_loader.py
     ├── advanced_image_crop.py
     ├── multi_save_image.py
-    └── simple_llm_node.py
+    ├── simple_llm_node.py
+    ├── smart_empty_latent.py
+    ├── size_preset_safe.py
+    └── smart_exact_resize.py
 ```
 
 ### Requirements
@@ -119,17 +147,22 @@ Issues and feature requests: [GitHub Issues](https://github.com/yourusername/Bai
 ### 概述
 
 Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 ComfyUI 工作流的自定义节点。  
-当前版本：**1.2.0**
+当前版本：**1.3.0**
 
 - `MeuxMultiSaveImage`：一次保存最多 16 组图像，支持可选统一尺寸。
 - `MeuxAdvancedImageCrop`：按像素或百分比裁剪，可选择 8/16 像素对齐。
 - `MeuxSimpleLLMNode`：在工作流中调用外部 LLM Chat Completion 接口。
 - `MeuxImageLoader`：兼容本地/URL 两种来源，可选写入 input 目录，完全替换原生 Load Image 节点。
+- `MeuxSmartEmptyLatent`：根据目标尺寸对齐规则，生成安全尺寸的空白 latent。
+- `MeuxSizePresetSafe`：计算安全生成尺寸并输出尺寸元信息，供下游节点使用。
+- `MeuxSmartExactResize`：智能裁剪/补边到精确尺寸，支持自动模式与多种补边方式。
 
 项目已改用模块化的 `nodes/` 目录，便于后续维护与扩展。
 
 ### 更新日志
 
+- **v1.3.0**
+  - 新增 `MeuxSmartEmptyLatent`、`MeuxSizePresetSafe`、`MeuxSmartExactResize`。
 - **v1.2.0**
   - 新增 `MeuxImageLoader`，支持 URL 下载、可完全替换原生 Load Image。
 - **v1.1.0**
@@ -198,6 +231,26 @@ Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 Com
 4. 执行节点将返回：
    - 主输出：模型回复文本；
    - 附加输出：完整 JSON 响应与消耗的 token 数。
+
+#### MeuxSmartEmptyLatent
+
+1. 设置 `target_width`、`target_height` 与 `batch_size`。
+2. 选择对齐方式 `align`（8 或 64），节点会向上取整为安全生成尺寸。
+3. 运行后输出空白 `LATENT`，以及 `gen_width`、`gen_height`。
+
+#### MeuxSizePresetSafe
+
+1. 设置 `target_width`、`target_height` 与 `batch_size`。
+2. 选择对齐方式 `align`（8 或 64），节点会向上取整为安全生成尺寸。
+3. 运行后输出 `gen_width`、`gen_height` 以及输入尺寸元信息。
+
+#### MeuxSmartExactResize
+
+1. 将 `IMAGE` 张量接入 `image`。
+2. 设置 `target_width` 与 `target_height`。
+3. 选择 `mode`：`auto`、`crop_only` 或 `pad_only`。
+4. 可选：裁剪锚点 `anchor`、自动裁剪安全边距 `safe_margin_percent`、补边方式 `padding_mode`。
+5. 运行后输出精确尺寸的图像张量。
 
 ### 目录结构
 
