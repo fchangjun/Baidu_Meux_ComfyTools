@@ -17,15 +17,15 @@ class SizePresetSafe:
             "required": {
                 "target_width": (
                     "INT",
-                    {"default": 1000, "min": 1, "step": 1}
+                    {"default": 1000, "min": 1,"max": 4096, "step": 1}
                 ),
                 "target_height": (
                     "INT",
-                    {"default": 600, "min": 1, "step": 1}
+                    {"default": 600, "min": 1,"max": 4096, "step": 1}
                 ),
                 "batch_size": (
                     "INT",
-                    {"default": 1, "min": 1, "step": 1}
+                    {"default": 1, "min": 1, "max": 4096,"step": 1}
                 ),
                 "align": (
                     ["8", "64"],

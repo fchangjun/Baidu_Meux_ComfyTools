@@ -6,7 +6,8 @@ from .nodes.image_loader import ImageLoader
 from .nodes.text_area_input import TextAreaInput
 from .nodes.smart_empty_latent import SmartEmptyLatent
 from .nodes.size_preset_safe import SizePresetSafe
-from .nodes.smart_exact_resize import SmartExactResize  
+from .nodes.smart_exact_resize import SmartExactResize 
+from .nodes.outpaint_size_preset_safe import OutpaintSizePresetSafe 
 
 NODE_CLASS_MAPPINGS = {
   "MeuxImageLoader": ImageLoader,
@@ -16,7 +17,8 @@ NODE_CLASS_MAPPINGS = {
   "MeuxTextAreaInput": TextAreaInput,
   "MeuxSmartEmptyLatent": SmartEmptyLatent,
   "MeuxSizePresetSafe": SizePresetSafe,
-  "MeuxSmartExactResize": SmartExactResize
+  "MeuxSmartExactResize": SmartExactResize,
+  "MeuxOutpaintSizePresetSafe": OutpaintSizePresetSafe
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -27,12 +29,13 @@ NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxTextAreaInput": "Meux Text Area",
   "MeuxSmartEmptyLatent": "Meux Smart Empty Latent",
   "MeuxSizePresetSafe": "Meux Size Preset Node",    
-  "MeuxSmartExactResize": "Meux Smart Exact Resize"
+  "MeuxSmartExactResize": "Meux Smart Exact Resize",
+  "MeuxOutpaintSizePresetSafe": "Meux Outpaint Size Preset Node"
 
 }
 
 # 可选：添加版本和作者信息
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __author__ = "fangchangjun"
 
 # 调试信息 - 可以帮助确认导入是否成功
