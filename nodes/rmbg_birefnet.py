@@ -13,12 +13,13 @@ except Exception:
 
 try:
     from torchvision import transforms
-    from transformers import AutoConfig, AutoModelForImageSegmentation
+    from transformers import AutoConfig, AutoModelForImageSegmentation, modeling_utils
     _IMPORT_ERROR = None
 except Exception as e:
     transforms = None
     AutoConfig = None
     AutoModelForImageSegmentation = None
+    modeling_utils = None
     _IMPORT_ERROR = e
 
 
@@ -140,8 +141,23 @@ def resolve_local_model_dir(model_name: str) -> str:
     for base_dir in get_candidate_base_dirs():
         local_dir = os.path.join(base_dir, model_name)
         if os.path.isdir(local_dir):
-            return local_dir
+            if is_valid_model_dir(local_dir):
+                return local_dir
+            raise FileNotFoundError(
+                f"模型目录不完整: {local_dir}。需要至少包含 config.json 和权重文件(*.safetensors 或 *.bin)。"
+            )
     return ""
+
+
+def is_valid_model_dir(model_dir: str) -> bool:
+    if not os.path.isdir(model_dir):
+        return False
+    if not os.path.isfile(os.path.join(model_dir, "config.json")):
+        return False
+    for name in os.listdir(model_dir):
+        if name.endswith(".safetensors") or name.endswith(".bin"):
+            return True
+    return False
 
 
 def list_local_models():
@@ -149,7 +165,7 @@ def list_local_models():
     for base_dir in get_candidate_base_dirs():
         for name in MODEL_PRESET_VALUES:
             full = os.path.join(base_dir, name)
-            if os.path.isdir(full):
+            if is_valid_model_dir(full):
                 available.add(name)
 
     if not available:
@@ -167,6 +183,13 @@ def load_model(model_name: str):
     if model_name in MODEL_CACHE:
         return MODEL_CACHE[model_name]
 
+    original_tie_weights = None
+    if modeling_utils is not None:
+        original_tie_weights = modeling_utils.PreTrainedModel.tie_weights
+        def _no_tie_weights(self):
+            return
+        modeling_utils.PreTrainedModel.tie_weights = _no_tie_weights
+
     repo_id, local_dir, local_only = resolve_model_source(model_name)
     if local_dir:
         if not os.path.isdir(local_dir):
@@ -179,12 +202,16 @@ def load_model(model_name: str):
             trust_remote_code=True,
         )
         config = _patch_config(config)
-        model = AutoModelForImageSegmentation.from_pretrained(
-            local_dir,
-            local_files_only=True,
-            trust_remote_code=True,
-            config=config,
-        )
+        try:
+            model = AutoModelForImageSegmentation.from_pretrained(
+                local_dir,
+                local_files_only=True,
+                trust_remote_code=True,
+                config=config,
+            )
+        finally:
+            if original_tie_weights is not None:
+                modeling_utils.PreTrainedModel.tie_weights = original_tie_weights
     else:
         config = AutoConfig.from_pretrained(
             repo_id,
@@ -192,12 +219,16 @@ def load_model(model_name: str):
             local_files_only=local_only,
         )
         config = _patch_config(config)
-        model = AutoModelForImageSegmentation.from_pretrained(
-            repo_id,
-            trust_remote_code=True,
-            local_files_only=local_only,
-            config=config,
-        )
+        try:
+            model = AutoModelForImageSegmentation.from_pretrained(
+                repo_id,
+                trust_remote_code=True,
+                local_files_only=local_only,
+                config=config,
+            )
+        finally:
+            if original_tie_weights is not None:
+                modeling_utils.PreTrainedModel.tie_weights = original_tie_weights
 
     device = get_device()
     model.to(device)
