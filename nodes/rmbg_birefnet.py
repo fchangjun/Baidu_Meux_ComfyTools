@@ -13,10 +13,11 @@ except Exception:
 
 try:
     from torchvision import transforms
-    from transformers import AutoModelForImageSegmentation
+    from transformers import AutoConfig, AutoModelForImageSegmentation
     _IMPORT_ERROR = None
 except Exception as e:
     transforms = None
+    AutoConfig = None
     AutoModelForImageSegmentation = None
     _IMPORT_ERROR = e
 
@@ -26,6 +27,7 @@ MODEL_PRESET_MAP = {
     "人像抠图 (BiRefNet-portrait)": "BiRefNet-portrait",
     "通用抠图 (BiRefNet)": "BiRefNet",
 }
+MODEL_PRESET_VALUES = set(MODEL_PRESET_MAP.values())
 
 
 def _require_deps():
@@ -33,6 +35,30 @@ def _require_deps():
         raise RuntimeError(
             "MeuxRMBG 依赖未安装，请先安装 transformers 与 torchvision。"
         ) from _IMPORT_ERROR
+
+
+def _patch_config(config):
+    # Some custom configs (e.g. BiRefNet) might not implement newer transformers APIs.
+    if not hasattr(config, "is_encoder_decoder"):
+        config.is_encoder_decoder = False
+
+    if not hasattr(config, "get_text_config"):
+        def _get_text_config(decoder=False, encoder=False, return_both=False):
+            return config
+        config.get_text_config = _get_text_config
+
+    # Prevent tie-weights logic (not needed for vision-only models).
+    if not hasattr(config, "tie_word_embeddings"):
+        config.tie_word_embeddings = False
+    else:
+        config.tie_word_embeddings = False
+
+    if not hasattr(config, "tie_encoder_decoder"):
+        config.tie_encoder_decoder = False
+    else:
+        config.tie_encoder_decoder = False
+
+    return config
 
 
 def get_device() -> torch.device:
@@ -57,6 +83,12 @@ def resolve_model_source(model_name: str) -> Tuple[str, str, bool]:
     local_dir = resolve_local_model_dir(model_name)
     if local_dir:
         return "", local_dir, True
+
+    if model_name in MODEL_PRESET_VALUES:
+        raise FileNotFoundError(
+            f"未找到本地模型目录: {model_name}。请放到 ComfyUI/models/BiRefNet 下，"
+            "或在 extra_model_paths.yaml 中添加 birefnet/BiRefNet 路径。"
+        )
 
     if "/" in model_name:
         return model_name, "", os.getenv("LOCAL_ONLY") == "1"
@@ -115,7 +147,7 @@ def resolve_local_model_dir(model_name: str) -> str:
 def list_local_models():
     available = set()
     for base_dir in get_candidate_base_dirs():
-        for name in os.listdir(base_dir):
+        for name in MODEL_PRESET_VALUES:
             full = os.path.join(base_dir, name)
             if os.path.isdir(full):
                 available.add(name)
@@ -127,9 +159,6 @@ def list_local_models():
     for friendly, real in MODEL_PRESET_MAP.items():
         if real in available:
             choices.append(friendly)
-
-    remaining = sorted(name for name in available if name not in MODEL_PRESET_MAP.values())
-    choices.extend(remaining)
     return choices
 
 
@@ -144,16 +173,30 @@ def load_model(model_name: str):
             raise FileNotFoundError(
                 f"MODEL_BASE_DIR 已设置，但找不到模型目录: {local_dir}"
             )
-        model = AutoModelForImageSegmentation.from_pretrained(
+        config = AutoConfig.from_pretrained(
             local_dir,
             local_files_only=True,
             trust_remote_code=True,
         )
+        config = _patch_config(config)
+        model = AutoModelForImageSegmentation.from_pretrained(
+            local_dir,
+            local_files_only=True,
+            trust_remote_code=True,
+            config=config,
+        )
     else:
+        config = AutoConfig.from_pretrained(
+            repo_id,
+            trust_remote_code=True,
+            local_files_only=local_only,
+        )
+        config = _patch_config(config)
         model = AutoModelForImageSegmentation.from_pretrained(
             repo_id,
             trust_remote_code=True,
             local_files_only=local_only,
+            config=config,
         )
 
     device = get_device()
