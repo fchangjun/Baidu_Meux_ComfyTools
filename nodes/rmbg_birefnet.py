@@ -278,8 +278,8 @@ class MeuxRMBG:
     - LOCAL_ONLY=1: only load local cache
     """
 
-    RETURN_TYPES = ("IMAGE", "MASK", "IMAGE")
-    RETURN_NAMES = ("image", "mask", "rgba")
+    RETURN_TYPES = ("IMAGE", "MASK")
+    RETURN_NAMES = ("image", "mask")
     FUNCTION = "process"
     CATEGORY = "image/segmentation"
 
@@ -303,7 +303,6 @@ class MeuxRMBG:
     def process(self, image, model_preset, input_size, apply_mask, invert_mask, model_override=""):
         output_images = []
         output_masks = []
-        output_rgba = []
 
         model = model_override.strip() or model_preset
         model = MODEL_PRESET_MAP.get(model, model)
@@ -320,13 +319,12 @@ class MeuxRMBG:
             mask_tensor = mask.unsqueeze(-1)
             output_masks.append(mask_tensor)
 
-            rgba = torch.cat([img_tensor, mask_tensor], dim=-1)
-            output_rgba.append(rgba)
-
             if apply_mask:
-                masked = img_tensor * mask_tensor
-                output_images.append(masked)
+                rgb = img_tensor * mask_tensor
             else:
-                output_images.append(img_tensor)
+                rgb = img_tensor
 
-        return (torch.stack(output_images), torch.stack(output_masks), torch.stack(output_rgba))
+            rgba = torch.cat([rgb, mask_tensor], dim=-1)
+            output_images.append(rgba)
+
+        return (torch.stack(output_images), torch.stack(output_masks))
