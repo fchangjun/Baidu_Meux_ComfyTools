@@ -96,6 +96,10 @@ def _candidate_model_dirs():
     candidates = []
     if folder_paths is not None:
         try:
+            candidates.extend(folder_paths.get_folder_paths("upscale_models"))
+        except Exception:
+            pass
+        try:
             models_dir = folder_paths.models_dir
         except Exception:
             models_dir = None
@@ -121,7 +125,7 @@ def _list_model_files():
 
     unique = sorted(set(files))
     if not unique:
-        unique = ["RealESRGAN_x4plus.pth"]
+        unique = [""]
 
     _MODEL_CHOICES_CACHE = unique
     return unique
@@ -135,6 +139,11 @@ def _invalidate_model_cache():
 def _resolve_model_path(model_name: str, model_path: str) -> str:
     if model_path and os.path.isfile(model_path):
         return model_path
+
+    if not model_name:
+        raise FileNotFoundError(
+            "未找到可用模型。请在下拉中选择模型，或填写绝对路径。"
+        )
 
     if model_name and os.path.isabs(model_name) and os.path.isfile(model_name):
         return model_name
@@ -212,7 +221,7 @@ class MeuxRealESRGANUpscale:
                     "FLOAT",
                     {"default": 2.0, "min": 0.1, "max": 8.0, "step": 0.1}
                 ),
-                "model_name": (_list_model_files(), {"default": "RealESRGAN_x4plus.pth"}),
+                "model_name": (_list_model_files(), {"default": ""}),
             },
             "optional": {
                 "model_path": ("STRING", {"default": ""}),

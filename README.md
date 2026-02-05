@@ -19,7 +19,7 @@ Current version: **1.5.0**
 - `MeuxSizePresetSafe`: compute safe generation size and return size metadata for downstream nodes.
 - `MeuxOutpaintSizePresetSafe`: compute safe per-side outpaint expansion aligned to 8/64.
 - `MeuxSmartExactResize`: smart crop/pad to exact target size with auto mode and padding options.
-- `MeuxRealESRGANUpscale` (displayed as “Meux ESRGAN Upscale”): local RealESRGAN upscale node using weights from `ComfyUI/models/upscale_models`.
+- `MeuxRealESRGANUpscale` (displayed as “Meux ESRGAN Upscale”): local RealESRGAN upscale node using weights from `ComfyUI/models/upscale_models` or `extra_model_paths.yaml` (`upscale_models`).
 
 The package now uses a modular `nodes/` directory so each node is easy to maintain and extend.
 
@@ -143,7 +143,7 @@ The package now uses a modular `nodes/` directory so each node is easy to mainta
 2. Feed an `IMAGE` tensor into `image`.
 3. Choose `scale_mode` (`2x/3x/4x/6x/8x/custom`) and set `custom_scale` when using `custom`.
    Note: the bundled model is a 4x model. Non-4x modes are produced by resizing after 4x inference.
-4. Select `model_name` from the dropdown (auto-scanned from `upscale_models`). If you add new models, toggle `refresh_model_list` once.
+4. Select `model_name` from the dropdown (auto-scanned from `upscale_models` and `extra_model_paths.yaml`). If you add new models, toggle `refresh_model_list` once.
 5. Optional: set `model_path` to an absolute path to override the lookup.
 6. Optional: enable `free_gpu_after` to release GPU memory after each run (slower but safer for long sessions).
 7. Run the node to output the upscaled image tensor.
@@ -196,7 +196,7 @@ Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 Com
 - `MeuxSizePresetSafe`：计算安全生成尺寸并输出尺寸元信息，供下游节点使用。
 - `MeuxOutpaintSizePresetSafe`：计算外扩的安全尺寸（按 8/64 对齐）。
 - `MeuxSmartExactResize`：智能裁剪/补边到精确尺寸，支持自动模式与多种补边方式。
-- `MeuxRealESRGANUpscale`（显示为“Meux ESRGAN Upscale”）：本地 RealESRGAN 放大节点，默认从 `ComfyUI/models/upscale_models` 读取权重。
+- `MeuxRealESRGANUpscale`（显示为“Meux ESRGAN Upscale”）：本地 RealESRGAN 放大节点，默认从 `ComfyUI/models/upscale_models` 或 `extra_model_paths.yaml`（`upscale_models`）读取权重。
 
 项目已改用模块化的 `nodes/` 目录，便于后续维护与扩展。
 
@@ -322,7 +322,7 @@ Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 Com
 2. 将 `IMAGE` 张量接入 `image`。
 3. 选择 `scale_mode`（`2x/3x/4x/6x/8x/custom`），使用 `custom` 时设置 `custom_scale`。
    注意：内置模型为 4x，非 4x 模式是在 4x 推理后再缩放得到。
-4. 通过下拉选择 `model_name`（自动扫描 `upscale_models`）。若新增模型，勾选一次 `refresh_model_list`。
+4. 通过下拉选择 `model_name`（自动扫描 `upscale_models` 与 `extra_model_paths.yaml`）。若新增模型，勾选一次 `refresh_model_list`。
 5. 可选：设置 `model_path` 为绝对路径以覆盖默认查找。
 6. 可选：开启 `free_gpu_after`，每次运行后释放显存（速度更慢，但适合长时间运行）。
 7. 运行后输出放大后的图像张量。
