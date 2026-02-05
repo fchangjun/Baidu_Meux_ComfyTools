@@ -19,6 +19,7 @@ except Exception as e:
 
 
 _UPSCALER_CACHE: Dict[Tuple[str, str], RealESRGAN] = {}
+_MODEL_CHOICES_CACHE = None
 
 
 def _require_deps():
@@ -42,10 +43,36 @@ def _candidate_model_dirs():
         except Exception:
             models_dir = None
         if models_dir:
-            candidates.append(os.path.join(models_dir, "upscale"))
             candidates.append(os.path.join(models_dir, "upscale_models"))
             candidates.append(os.path.join(models_dir, "upscaler"))
     return [c for c in candidates if c and os.path.isdir(c)]
+
+
+def _list_model_files():
+    global _MODEL_CHOICES_CACHE
+    if _MODEL_CHOICES_CACHE is not None:
+        return _MODEL_CHOICES_CACHE
+
+    files = []
+    for base_dir in _candidate_model_dirs():
+        try:
+            for name in os.listdir(base_dir):
+                if name.endswith(".pth") or name.endswith(".pt") or name.endswith(".safetensors"):
+                    files.append(name)
+        except Exception:
+            continue
+
+    unique = sorted(set(files))
+    if not unique:
+        unique = ["RealESRGAN_x4plus.pth"]
+
+    _MODEL_CHOICES_CACHE = unique
+    return unique
+
+
+def _invalidate_model_cache():
+    global _MODEL_CHOICES_CACHE
+    _MODEL_CHOICES_CACHE = None
 
 
 def _resolve_model_path(model_name: str, model_path: str) -> str:
@@ -61,7 +88,7 @@ def _resolve_model_path(model_name: str, model_path: str) -> str:
             return path
 
     raise FileNotFoundError(
-        "未找到 RealESRGAN 权重文件。请确认文件位于 ComfyUI/models/upscale/"
+        "未找到 RealESRGAN 权重文件。请确认文件位于 ComfyUI/models/upscale_models/"
         f" 或指定绝对路径。当前查找名: {model_name}"
     )
 
@@ -93,14 +120,12 @@ class MeuxRealESRGANUpscale:
                     "FLOAT",
                     {"default": 2.0, "min": 0.1, "max": 8.0, "step": 0.1}
                 ),
-                "model_name": (
-                    "STRING",
-                    {"default": "RealESRGAN_x4plus.pth"}
-                ),
+                "model_name": (_list_model_files(), {"default": "RealESRGAN_x4plus.pth"}),
             },
             "optional": {
                 "model_path": ("STRING", {"default": ""}),
-                "free_gpu_after": ("BOOLEAN", {"default": False})
+                "free_gpu_after": ("BOOLEAN", {"default": False}),
+                "refresh_model_list": ("BOOLEAN", {"default": False})
             }
         }
 
@@ -108,7 +133,18 @@ class MeuxRealESRGANUpscale:
     FUNCTION = "process"
     CATEGORY = "image/upscale"
 
-    def process(self, image, scale_mode, custom_scale, model_name, model_path="", free_gpu_after=False):
+    def process(
+        self,
+        image,
+        scale_mode,
+        custom_scale,
+        model_name,
+        model_path="",
+        free_gpu_after=False,
+        refresh_model_list=False
+    ):
+        if refresh_model_list:
+            _invalidate_model_cache()
         model_path = _resolve_model_path(model_name, model_path)
         upscaler = _get_upscaler(model_path)
 
