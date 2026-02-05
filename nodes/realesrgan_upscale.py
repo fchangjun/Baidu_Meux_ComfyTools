@@ -53,17 +53,25 @@ def _ensure_torchvision_shim():
     sys.modules[module_name] = shim
 
 
+_BACKEND = None
+RealESRGAN = None
+RealESRGANer = None
+RRDBNet = None
+
 try:
     _ensure_torchvision_shim()
-    from RealESRGAN import RealESRGAN
+    from RealESRGAN import RealESRGAN  # type: ignore
+    _BACKEND = "class"
     _IMPORT_ERROR = None
 except Exception:
     try:
         _ensure_torchvision_shim()
-        from realesrgan import RealESRGAN
+        from realesrgan import RealESRGANer  # type: ignore
+        from basicsr.archs.rrdbnet_arch import RRDBNet  # type: ignore
+        _BACKEND = "er"
         _IMPORT_ERROR = None
     except Exception as e:
-        RealESRGAN = None
+        _BACKEND = None
         _IMPORT_ERROR = e
 
 
@@ -149,8 +157,43 @@ def _get_upscaler(model_path: str) -> RealESRGAN:
     if cache_key in _UPSCALER_CACHE:
         return _UPSCALER_CACHE[cache_key]
 
-    upscaler = RealESRGAN(device=device, scale=4)
-    upscaler.load_weights(model_path, download=False)
+    if _BACKEND == "class":
+        upscaler = RealESRGAN(device=device, scale=4)
+        upscaler.load_weights(model_path, download=False)
+    elif _BACKEND == "er":
+        class _RealESRGANerWrapper:
+            def __init__(self, model_path: str, device: str):
+                model = RRDBNet(
+                    num_in_ch=3,
+                    num_out_ch=3,
+                    num_feat=64,
+                    num_block=23,
+                    num_grow_ch=32,
+                    scale=4,
+                )
+                self.upsampler = RealESRGANer(
+                    scale=4,
+                    model_path=model_path,
+                    model=model,
+                    tile=0,
+                    tile_pad=10,
+                    pre_pad=0,
+                    half=(device == "cuda"),
+                    device=device,
+                )
+
+            def predict(self, pil_image: Image.Image) -> Image.Image:
+                import cv2
+                img = np.array(pil_image)
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                output, _ = self.upsampler.enhance(img, outscale=1)
+                output = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
+                return Image.fromarray(output)
+
+        upscaler = _RealESRGANerWrapper(model_path, device)
+    else:
+        raise RuntimeError("RealESRGAN backend not available")
+
     _UPSCALER_CACHE[cache_key] = upscaler
     return upscaler
 
