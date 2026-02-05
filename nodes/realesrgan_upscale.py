@@ -1,4 +1,6 @@
 import os
+import sys
+import types
 from typing import Dict, Tuple
 
 import numpy as np
@@ -10,11 +12,54 @@ try:
 except Exception:
     folder_paths = None
 
+def _ensure_torchvision_shim():
+    """
+    basicsr (realesrgan dependency) expects torchvision.transforms.functional_tensor.rgb_to_grayscale
+    which is removed in newer torchvision. Provide a minimal shim so imports succeed.
+    """
+    try:
+        import torchvision  # noqa: F401
+    except Exception:
+        return
+
+    module_name = "torchvision.transforms.functional_tensor"
+    if module_name in sys.modules:
+        return
+
+    try:
+        import torchvision.transforms.functional as F
+    except Exception:
+        return
+
+    def _rgb_to_grayscale(img, num_output_channels=1):
+        if not torch.is_tensor(img):
+            return F.rgb_to_grayscale(img, num_output_channels=num_output_channels)
+
+        if img.dim() == 3:
+            r, g, b = img[0:1], img[1:2], img[2:3]
+            gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+        elif img.dim() >= 4:
+            r, g, b = img[:, 0:1], img[:, 1:2], img[:, 2:3]
+            gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+        else:
+            return img
+
+        if num_output_channels == 3:
+            gray = gray.repeat(1, 3, 1, 1) if gray.dim() >= 4 else gray.repeat(3, 1, 1)
+        return gray
+
+    shim = types.ModuleType(module_name)
+    shim.rgb_to_grayscale = _rgb_to_grayscale
+    sys.modules[module_name] = shim
+
+
 try:
+    _ensure_torchvision_shim()
     from RealESRGAN import RealESRGAN
     _IMPORT_ERROR = None
 except Exception:
     try:
+        _ensure_torchvision_shim()
         from realesrgan import RealESRGAN
         _IMPORT_ERROR = None
     except Exception as e:
