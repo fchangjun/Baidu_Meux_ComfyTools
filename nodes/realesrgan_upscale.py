@@ -13,9 +13,13 @@ except Exception:
 try:
     from RealESRGAN import RealESRGAN
     _IMPORT_ERROR = None
-except Exception as e:
-    RealESRGAN = None
-    _IMPORT_ERROR = e
+except Exception:
+    try:
+        from realesrgan import RealESRGAN
+        _IMPORT_ERROR = None
+    except Exception as e:
+        RealESRGAN = None
+        _IMPORT_ERROR = e
 
 
 _UPSCALER_CACHE: Dict[Tuple[str, str], RealESRGAN] = {}

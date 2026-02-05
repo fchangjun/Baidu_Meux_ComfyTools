@@ -4,4 +4,4 @@ Pillow
 torch
 transformers
 torchvision
-RealESRGAN
+realesrgan

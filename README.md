@@ -172,7 +172,7 @@ Baidu_Meux_ComfyTools/
 - Pillow
 - NumPy
 - Requests (required by `MeuxSimpleLLMNode` and `MeuxImageLoader`)
-- RealESRGAN (required by `MeuxRealESRGANUpscale`)
+- realesrgan (required by `MeuxRealESRGANUpscale`)
 
 ### License & Support
 
@@ -351,7 +351,7 @@ Baidu_Meux_ComfyTools/
 - Pillow
 - NumPy
 - Requests（供 `MeuxSimpleLLMNode` 与 `MeuxImageLoader` 访问 HTTP 接口）
-- RealESRGAN（供 `MeuxRealESRGANUpscale` 使用）
+- realesrgan（供 `MeuxRealESRGANUpscale` 使用）
 
 ### 许可证与支持
 
