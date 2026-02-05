@@ -9,6 +9,7 @@ from .nodes.size_preset_safe import SizePresetSafe
 from .nodes.smart_exact_resize import SmartExactResize 
 from .nodes.outpaint_size_preset_safe import OutpaintSizePresetSafe 
 from .nodes.rmbg_birefnet import MeuxRMBG
+from .nodes.realesrgan_upscale import MeuxRealESRGANUpscale
 
 NODE_CLASS_MAPPINGS = {
   "MeuxImageLoader": ImageLoader,
@@ -20,7 +21,8 @@ NODE_CLASS_MAPPINGS = {
   "MeuxSizePresetSafe": SizePresetSafe,
   "MeuxSmartExactResize": SmartExactResize,
   "MeuxOutpaintSizePresetSafe": OutpaintSizePresetSafe,
-  "MeuxRMBG": MeuxRMBG
+  "MeuxRMBG": MeuxRMBG,
+  "MeuxRealESRGANUpscale": MeuxRealESRGANUpscale
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -33,7 +35,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxSizePresetSafe": "Meux Size Preset Node",    
   "MeuxSmartExactResize": "Meux Smart Exact Resize",
   "MeuxOutpaintSizePresetSafe": "Meux Outpaint Size Preset Node",
-  "MeuxRMBG": "Meux RMBG (BiRefNet)"
+  "MeuxRMBG": "Meux RMBG (BiRefNet)",
+  "MeuxRealESRGANUpscale": "Meux ESRGAN Upscale"
 
 }
 

@@ -9,7 +9,7 @@
 ### Overview
 
 Baidu Meux ComfyTools is a collection of custom nodes that streamline common workflow chores in ComfyUI for the Baidu Meux asset platform.  
-Current version: **1.4.0**
+Current version: **1.5.0**
 
 - `MeuxMultiSaveImage`: save up to sixteen image batches with optional resizing.
 - `MeuxAdvancedImageCrop`: crop images by pixels or percentage with optional grid alignment.
@@ -19,11 +19,14 @@ Current version: **1.4.0**
 - `MeuxSizePresetSafe`: compute safe generation size and return size metadata for downstream nodes.
 - `MeuxOutpaintSizePresetSafe`: compute safe per-side outpaint expansion aligned to 8/64.
 - `MeuxSmartExactResize`: smart crop/pad to exact target size with auto mode and padding options.
+- `MeuxRealESRGANUpscale` (displayed as “Meux ESRGAN Upscale”): local RealESRGAN upscale node using weights from `ComfyUI/models/upscale`.
 
 The package now uses a modular `nodes/` directory so each node is easy to maintain and extend.
 
 ### Changelog
 
+- **v1.5.0**
+  - Added `MeuxRealESRGANUpscale` for local RealESRGAN image upscaling.
 - **v1.4.0**
   - Added `MeuxOutpaintSizePresetSafe` for safe outpaint expansion sizes.
   - Capped size inputs at 4096 for size-related nodes.
@@ -122,6 +125,29 @@ The package now uses a modular `nodes/` directory so each node is easy to mainta
 4. Optional: `anchor` for cropping, `safe_margin_percent` for auto crop safety, and `padding_mode` for padding style.
 5. Run the node to output a resized image with exact target dimensions.
 
+#### Meux ESRGAN Upscale
+
+1. Download the model weight `RealESRGAN_x4plus.pth` from the official release:
+
+   ```bash
+   wget https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
+   ```
+
+2. Install it under `ComfyUI/models/upscale/`:
+
+   ```bash
+   mkdir -p ComfyUI/models/upscale
+   mv RealESRGAN_x4plus.pth ComfyUI/models/upscale/
+   ```
+
+2. Feed an `IMAGE` tensor into `image`.
+3. Choose `scale_mode` (`2x/3x/4x/6x/8x/custom`) and set `custom_scale` when using `custom`.
+   Note: the bundled model is a 4x model. Non-4x modes are produced by resizing after 4x inference.
+4. Set `model_name` (default `RealESRGAN_x4plus.pth`).
+5. Optional: set `model_path` to an absolute path to override the lookup.
+6. Optional: enable `free_gpu_after` to release GPU memory after each run (slower but safer for long sessions).
+7. Run the node to output the upscaled image tensor.
+
 ### Folder Structure
 
 ```
@@ -135,7 +161,8 @@ Baidu_Meux_ComfyTools/
     ├── smart_empty_latent.py
     ├── size_preset_safe.py
     ├── outpaint_size_preset_safe.py
-    └── smart_exact_resize.py
+    ├── smart_exact_resize.py
+    └── realesrgan_upscale.py
 ```
 
 ### Requirements
@@ -145,6 +172,7 @@ Baidu_Meux_ComfyTools/
 - Pillow
 - NumPy
 - Requests (required by `MeuxSimpleLLMNode` and `MeuxImageLoader`)
+- RealESRGAN (required by `MeuxRealESRGANUpscale`)
 
 ### License & Support
 
@@ -158,7 +186,7 @@ Issues and feature requests: [GitHub Issues](https://github.com/yourusername/Bai
 ### 概述
 
 Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 ComfyUI 工作流的自定义节点。  
-当前版本：**1.4.0**
+当前版本：**1.5.0**
 
 - `MeuxMultiSaveImage`：一次保存最多 16 组图像，支持可选统一尺寸。
 - `MeuxAdvancedImageCrop`：按像素或百分比裁剪，可选择 8/16 像素对齐。
@@ -168,11 +196,14 @@ Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 Com
 - `MeuxSizePresetSafe`：计算安全生成尺寸并输出尺寸元信息，供下游节点使用。
 - `MeuxOutpaintSizePresetSafe`：计算外扩的安全尺寸（按 8/64 对齐）。
 - `MeuxSmartExactResize`：智能裁剪/补边到精确尺寸，支持自动模式与多种补边方式。
+- `MeuxRealESRGANUpscale`（显示为“Meux ESRGAN Upscale”）：本地 RealESRGAN 放大节点，默认从 `ComfyUI/models/upscale` 读取权重。
 
 项目已改用模块化的 `nodes/` 目录，便于后续维护与扩展。
 
 ### 更新日志
 
+- **v1.5.0**
+  - 新增 `MeuxRealESRGANUpscale`，用于本地 RealESRGAN 放大。
 - **v1.4.0**
   - 新增 `MeuxOutpaintSizePresetSafe`，用于安全外扩尺寸计算。
   - 尺寸相关输入上限统一为 4096。
@@ -273,6 +304,29 @@ Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 Com
 4. 可选：裁剪锚点 `anchor`、自动裁剪安全边距 `safe_margin_percent`、补边方式 `padding_mode`。
 5. 运行后输出精确尺寸的图像张量。
 
+#### Meux ESRGAN Upscale
+
+1. 从官方 Release 下载 `RealESRGAN_x4plus.pth`：
+
+   ```bash
+   wget https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
+   ```
+
+2. 安装路径为 `ComfyUI/models/upscale/`：
+
+   ```bash
+   mkdir -p ComfyUI/models/upscale
+   mv RealESRGAN_x4plus.pth ComfyUI/models/upscale/
+   ```
+
+2. 将 `IMAGE` 张量接入 `image`。
+3. 选择 `scale_mode`（`2x/3x/4x/6x/8x/custom`），使用 `custom` 时设置 `custom_scale`。
+   注意：内置模型为 4x，非 4x 模式是在 4x 推理后再缩放得到。
+4. 设置 `model_name`（默认 `RealESRGAN_x4plus.pth`）。
+5. 可选：设置 `model_path` 为绝对路径以覆盖默认查找。
+6. 可选：开启 `free_gpu_after`，每次运行后释放显存（速度更慢，但适合长时间运行）。
+7. 运行后输出放大后的图像张量。
+
 ### 目录结构
 
 ```
@@ -286,7 +340,8 @@ Baidu_Meux_ComfyTools/
     ├── smart_empty_latent.py
     ├── size_preset_safe.py
     ├── outpaint_size_preset_safe.py
-    └── smart_exact_resize.py
+    ├── smart_exact_resize.py
+    └── realesrgan_upscale.py
 ```
 
 ### 依赖
@@ -296,6 +351,7 @@ Baidu_Meux_ComfyTools/
 - Pillow
 - NumPy
 - Requests（供 `MeuxSimpleLLMNode` 与 `MeuxImageLoader` 访问 HTTP 接口）
+- RealESRGAN（供 `MeuxRealESRGANUpscale` 使用）
 
 ### 许可证与支持
 
