@@ -9,7 +9,7 @@
 ### Overview
 
 Baidu Meux ComfyTools is a collection of custom nodes that streamline common workflow chores in ComfyUI for the Baidu Meux asset platform.  
-Current version: **1.4.0**
+Current version: **1.5.0**
 
 - `MeuxMultiSaveImage`: save up to sixteen image batches with optional resizing.
 - `MeuxAdvancedImageCrop`: crop images by pixels or percentage with optional grid alignment.
@@ -19,11 +19,16 @@ Current version: **1.4.0**
 - `MeuxSizePresetSafe`: compute safe generation size and return size metadata for downstream nodes.
 - `MeuxOutpaintSizePresetSafe`: compute safe per-side outpaint expansion aligned to 8/64.
 - `MeuxSmartExactResize`: smart crop/pad to exact target size with auto mode and padding options.
+- `MeuxRMBG` (displayed as "Meux RMBG (BiRefNet)"): background removal node based on BiRefNet, outputs `RGBA IMAGE` and `MASK`.
+- `MeuxRealESRGANUpscale` (displayed as “Meux ESRGAN Upscale”): local RealESRGAN upscale node using weights from `ComfyUI/models/upscale_models` or `extra_model_paths.yaml` (`upscale_models`).
 
 The package now uses a modular `nodes/` directory so each node is easy to maintain and extend.
 
 ### Changelog
 
+- **v1.5.0**
+  - Added `MeuxRMBG` for local/remote BiRefNet background removal.
+  - Added `MeuxRealESRGANUpscale` for local RealESRGAN image upscaling.
 - **v1.4.0**
   - Added `MeuxOutpaintSizePresetSafe` for safe outpaint expansion sizes.
   - Capped size inputs at 4096 for size-related nodes.
@@ -54,7 +59,14 @@ The package now uses a modular `nodes/` directory so each node is easy to mainta
    git pull
    ```
 
-3. Restart ComfyUI. The nodes appear under the `image`, `Image/Transform`, `LLM`, and `utils/size` categories.
+3. Install dependencies:
+
+   ```bash
+   cd ComfyUI/custom_nodes/Baidu_Meux_ComfyTools
+   pip install -r requirements.txt
+   ```
+
+4. Restart ComfyUI. The nodes appear under `image`, `image/segmentation`, `image/upscale`, `Image/Transform`, `LLM`, and `utils/size`.
 
 ### Usage Tutorial
 
@@ -122,11 +134,51 @@ The package now uses a modular `nodes/` directory so each node is easy to mainta
 4. Optional: `anchor` for cropping, `safe_margin_percent` for auto crop safety, and `padding_mode` for padding style.
 5. Run the node to output a resized image with exact target dimensions.
 
+#### Meux RMBG (BiRefNet)
+
+1. Prepare one of these model folders in `ComfyUI/models/BiRefNet/` (or configure `extra_model_paths.yaml` with `birefnet`/`BiRefNet`):
+   - `BiRefNet-portrait` (portrait matting)
+   - `BiRefNet` (generic foreground)
+2. Ensure each model directory contains `config.json` and at least one weight file (`*.safetensors` or `*.bin`).
+3. Feed an `IMAGE` tensor into `image`, choose `model_preset`, and set `input_size` (256-2048).
+4. Optional toggles:
+   - `apply_mask`: multiply RGB by mask before output.
+   - `invert_mask`: invert foreground/background selection.
+   - `model_override`: override preset with absolute path or Hugging Face repo id.
+5. Run the node to get:
+   - `image`: RGBA image (alpha from mask)
+   - `mask`: normalized single-channel mask
+
+#### Meux ESRGAN Upscale
+
+1. Download the model weight `RealESRGAN_x4plus.pth` from the official release:
+
+   ```bash
+   wget https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
+   ```
+
+2. Install it under `ComfyUI/models/upscale_models/`:
+
+   ```bash
+   mkdir -p ComfyUI/models/upscale_models
+   mv RealESRGAN_x4plus.pth ComfyUI/models/upscale_models/
+   ```
+
+3. Feed an `IMAGE` tensor into `image`.
+4. Choose `scale_mode` (`2x/3x/4x/6x/8x/custom`) and set `custom_scale` when using `custom`.
+   Note: the bundled model is a 4x model. Non-4x modes are produced by resizing after 4x inference.
+5. Select `model_name` from the dropdown (auto-scanned from `upscale_models` and `extra_model_paths.yaml`). If you add new models, toggle `refresh_model_list` once.
+6. Optional: set `model_path` to an absolute path to override the lookup.
+7. Optional: enable `free_gpu_after` to release GPU memory after each run (slower but safer for long sessions).
+8. Run the node to output the upscaled image tensor.
+
 ### Folder Structure
 
 ```
 Baidu_Meux_ComfyTools/
 ├── __init__.py          # Registers all exposed nodes
+├── requirements.txt     # Python dependencies
+├── rmgb.py              # Optional FastAPI RMBG demo service
 └── nodes/
     ├── image_loader.py
     ├── advanced_image_crop.py
@@ -135,7 +187,9 @@ Baidu_Meux_ComfyTools/
     ├── smart_empty_latent.py
     ├── size_preset_safe.py
     ├── outpaint_size_preset_safe.py
-    └── smart_exact_resize.py
+    ├── smart_exact_resize.py
+    ├── rmbg_birefnet.py
+    └── realesrgan_upscale.py
 ```
 
 ### Requirements
@@ -145,6 +199,9 @@ Baidu_Meux_ComfyTools/
 - Pillow
 - NumPy
 - Requests (required by `MeuxSimpleLLMNode` and `MeuxImageLoader`)
+- transformers (required by `MeuxRMBG`)
+- torchvision (required by `MeuxRMBG`)
+- realesrgan (required by `MeuxRealESRGANUpscale`)
 
 ### License & Support
 
@@ -158,7 +215,7 @@ Issues and feature requests: [GitHub Issues](https://github.com/yourusername/Bai
 ### 概述
 
 Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 ComfyUI 工作流的自定义节点。  
-当前版本：**1.4.0**
+当前版本：**1.5.0**
 
 - `MeuxMultiSaveImage`：一次保存最多 16 组图像，支持可选统一尺寸。
 - `MeuxAdvancedImageCrop`：按像素或百分比裁剪，可选择 8/16 像素对齐。
@@ -168,11 +225,16 @@ Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 Com
 - `MeuxSizePresetSafe`：计算安全生成尺寸并输出尺寸元信息，供下游节点使用。
 - `MeuxOutpaintSizePresetSafe`：计算外扩的安全尺寸（按 8/64 对齐）。
 - `MeuxSmartExactResize`：智能裁剪/补边到精确尺寸，支持自动模式与多种补边方式。
+- `MeuxRMBG`（显示为 "Meux RMBG (BiRefNet)"）：基于 BiRefNet 的抠图节点，输出 `RGBA IMAGE` 与 `MASK`。
+- `MeuxRealESRGANUpscale`（显示为“Meux ESRGAN Upscale”）：本地 RealESRGAN 放大节点，默认从 `ComfyUI/models/upscale_models` 或 `extra_model_paths.yaml`（`upscale_models`）读取权重。
 
 项目已改用模块化的 `nodes/` 目录，便于后续维护与扩展。
 
 ### 更新日志
 
+- **v1.5.0**
+  - 新增 `MeuxRMBG`，支持本地/远端 BiRefNet 抠图。
+  - 新增 `MeuxRealESRGANUpscale`，用于本地 RealESRGAN 放大。
 - **v1.4.0**
   - 新增 `MeuxOutpaintSizePresetSafe`，用于安全外扩尺寸计算。
   - 尺寸相关输入上限统一为 4096。
@@ -203,7 +265,14 @@ Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 Com
    git pull
    ```
 
-3. 重启 ComfyUI，节点将出现在 `image`、`Image/Transform`、`LLM` 与 `utils/size` 分类下。
+3. 安装依赖：
+
+   ```bash
+   cd ComfyUI/custom_nodes/Baidu_Meux_ComfyTools
+   pip install -r requirements.txt
+   ```
+
+4. 重启 ComfyUI，节点将出现在 `image`、`image/segmentation`、`image/upscale`、`Image/Transform`、`LLM` 与 `utils/size` 分类下。
 
 ### 使用教程
 
@@ -273,11 +342,51 @@ Baidu Meux ComfyTools 是一组面向百度 Meux 资产平台、帮助简化 Com
 4. 可选：裁剪锚点 `anchor`、自动裁剪安全边距 `safe_margin_percent`、补边方式 `padding_mode`。
 5. 运行后输出精确尺寸的图像张量。
 
+#### Meux RMBG (BiRefNet)
+
+1. 在 `ComfyUI/models/BiRefNet/` 下准备模型目录（或在 `extra_model_paths.yaml` 增加 `birefnet`/`BiRefNet` 路径）：
+   - `BiRefNet-portrait`（人像抠图）
+   - `BiRefNet`（通用抠图）
+2. 每个模型目录至少包含 `config.json` 与一个权重文件（`*.safetensors` 或 `*.bin`）。
+3. 将 `IMAGE` 张量接入 `image`，选择 `model_preset`，并设置 `input_size`（256-2048）。
+4. 可选开关：
+   - `apply_mask`：输出前将 RGB 与 mask 相乘。
+   - `invert_mask`：反转前景/背景。
+   - `model_override`：用绝对路径或 Hugging Face 仓库 ID 覆盖预设。
+5. 运行后输出：
+   - `image`：RGBA 图像（alpha 来自 mask）
+   - `mask`：归一化单通道 mask
+
+#### Meux ESRGAN Upscale
+
+1. 从官方 Release 下载 `RealESRGAN_x4plus.pth`：
+
+   ```bash
+   wget https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
+   ```
+
+2. 安装路径为 `ComfyUI/models/upscale_models/`：
+
+   ```bash
+   mkdir -p ComfyUI/models/upscale_models
+   mv RealESRGAN_x4plus.pth ComfyUI/models/upscale_models/
+   ```
+
+3. 将 `IMAGE` 张量接入 `image`。
+4. 选择 `scale_mode`（`2x/3x/4x/6x/8x/custom`），使用 `custom` 时设置 `custom_scale`。
+   注意：内置模型为 4x，非 4x 模式是在 4x 推理后再缩放得到。
+5. 通过下拉选择 `model_name`（自动扫描 `upscale_models` 与 `extra_model_paths.yaml`）。若新增模型，勾选一次 `refresh_model_list`。
+6. 可选：设置 `model_path` 为绝对路径以覆盖默认查找。
+7. 可选：开启 `free_gpu_after`，每次运行后释放显存（速度更慢，但适合长时间运行）。
+8. 运行后输出放大后的图像张量。
+
 ### 目录结构
 
 ```
 Baidu_Meux_ComfyTools/
 ├── __init__.py          # 节点入口注册
+├── requirements.txt     # Python 依赖
+├── rmgb.py              # 可选 FastAPI 抠图演示服务
 └── nodes/
     ├── image_loader.py
     ├── advanced_image_crop.py
@@ -286,7 +395,9 @@ Baidu_Meux_ComfyTools/
     ├── smart_empty_latent.py
     ├── size_preset_safe.py
     ├── outpaint_size_preset_safe.py
-    └── smart_exact_resize.py
+    ├── smart_exact_resize.py
+    ├── rmbg_birefnet.py
+    └── realesrgan_upscale.py
 ```
 
 ### 依赖
@@ -296,6 +407,9 @@ Baidu_Meux_ComfyTools/
 - Pillow
 - NumPy
 - Requests（供 `MeuxSimpleLLMNode` 与 `MeuxImageLoader` 访问 HTTP 接口）
+- transformers（供 `MeuxRMBG` 使用）
+- torchvision（供 `MeuxRMBG` 使用）
+- realesrgan（供 `MeuxRealESRGANUpscale` 使用）
 
 ### 许可证与支持
 

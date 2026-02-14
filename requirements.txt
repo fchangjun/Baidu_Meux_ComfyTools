@@ -1,0 +1,7 @@
+requests
+numpy
+Pillow
+torch
+transformers
+torchvision
+realesrgan
