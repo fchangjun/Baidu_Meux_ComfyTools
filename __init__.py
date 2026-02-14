@@ -41,7 +41,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 }
 
 # 可选：添加版本和作者信息
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 __author__ = "fangchangjun"
 
 # 调试信息 - 可以帮助确认导入是否成功
