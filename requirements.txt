@@ -5,3 +5,4 @@ torch
 transformers
 torchvision
 realesrgan
+scipy

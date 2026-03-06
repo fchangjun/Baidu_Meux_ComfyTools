@@ -10,6 +10,9 @@ from .nodes.smart_exact_resize import SmartExactResize
 from .nodes.outpaint_size_preset_safe import OutpaintSizePresetSafe 
 from .nodes.rmbg_birefnet import MeuxRMBG
 from .nodes.realesrgan_upscale import MeuxRealESRGANUpscale
+from .nodes.mask_fill_holes import MeuxMaskFillHoles
+from .nodes.mask_blur_plus import MeuxMaskBlurPlus
+from .nodes.seed_node import MeuxSeed
 
 NODE_CLASS_MAPPINGS = {
   "MeuxImageLoader": ImageLoader,
@@ -22,7 +25,13 @@ NODE_CLASS_MAPPINGS = {
   "MeuxSmartExactResize": SmartExactResize,
   "MeuxOutpaintSizePresetSafe": OutpaintSizePresetSafe,
   "MeuxRMBG": MeuxRMBG,
-  "MeuxRealESRGANUpscale": MeuxRealESRGANUpscale
+  "MeuxRealESRGANUpscale": MeuxRealESRGANUpscale,
+  "MeuxMaskFillHoles": MeuxMaskFillHoles,
+  "MeuxMaskBlurPlus": MeuxMaskBlurPlus,
+  "MeuxSeed": MeuxSeed,
+  "Mask Fill Holes": MeuxMaskFillHoles,
+  "MaskBlur+": MeuxMaskBlurPlus,
+  "Seed": MeuxSeed,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -36,7 +45,13 @@ NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxSmartExactResize": "Meux Smart Exact Resize",
   "MeuxOutpaintSizePresetSafe": "Meux Outpaint Size Preset Node",
   "MeuxRMBG": "Meux RMBG (BiRefNet)",
-  "MeuxRealESRGANUpscale": "Meux ESRGAN Upscale"
+  "MeuxRealESRGANUpscale": "Meux ESRGAN Upscale",
+  "MeuxMaskFillHoles": "Meux Mask Fill Holes",
+  "MeuxMaskBlurPlus": "Meux Mask Blur+",
+  "MeuxSeed": "Meux Seed",
+  "Mask Fill Holes": "Mask Fill Holes",
+  "MaskBlur+": "MaskBlur+",
+  "Seed": "Seed",
 
 }
 
