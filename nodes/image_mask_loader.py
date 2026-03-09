@@ -121,6 +121,7 @@ class ImageMaskLoader(ImageLoader):
             verify_ssl=verify_ssl,
         )
         image_tensor, embedded_mask = self._pil_to_tensors(image_pil)
+        embedded_mask = self._normalize_embedded_mask(image_pil, image_tensor, embedded_mask)
 
         if mask_source_type == "embedded":
             mask_tensor = embedded_mask
@@ -248,11 +249,11 @@ class ImageMaskLoader(ImageLoader):
 
     def _mask_from_alpha(self, channel: Image.Image) -> torch.Tensor:
         array = np.array(channel).astype(np.float32) / 255.0
-        return torch.from_numpy(array)[None, ..., None]
+        return 1.0 - torch.from_numpy(array).unsqueeze(0)
 
     def _mask_from_luminance(self, image: Image.Image) -> torch.Tensor:
         array = np.array(image.convert("L")).astype(np.float32) / 255.0
-        return torch.from_numpy(array)[None, ..., None]
+        return torch.from_numpy(array).unsqueeze(0)
 
     def _mask_from_standard_channel(self, image: Image.Image, channel_name: str) -> torch.Tensor:
         if image.mode not in {"RGB", "RGBA"}:
@@ -260,12 +261,29 @@ class ImageMaskLoader(ImageLoader):
         if channel_name not in image.getbands():
             raise ValueError(f"遮罩图不包含 {channel_name} 通道。")
         array = np.array(image.getchannel(channel_name)).astype(np.float32) / 255.0
-        return torch.from_numpy(array)[None, ..., None]
+        return torch.from_numpy(array).unsqueeze(0)
 
     def _resize_mask(self, mask_tensor: torch.Tensor, target_width: int, target_height: int) -> torch.Tensor:
-        mask = mask_tensor.permute(0, 3, 1, 2)
+        mask = mask_tensor.unsqueeze(1)
         mask = torch.nn.functional.interpolate(mask, size=(target_height, target_width), mode="nearest")
-        return mask.permute(0, 2, 3, 1)
+        return mask.squeeze(1)
+
+    def _normalize_embedded_mask(
+        self,
+        image: Image.Image,
+        image_tensor: torch.Tensor,
+        mask_tensor: torch.Tensor,
+    ) -> torch.Tensor:
+        if mask_tensor.ndim == 4 and mask_tensor.shape[-1] == 1:
+            mask_tensor = mask_tensor.squeeze(-1)
+
+        if "A" in image.getbands():
+            return 1.0 - mask_tensor
+
+        if image.mode == "L":
+            return mask_tensor
+
+        return torch.zeros((1, image_tensor.shape[1], image_tensor.shape[2]), dtype=torch.float32)
 
 
 __all__ = ["ImageMaskLoader"]
