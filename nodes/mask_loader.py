@@ -32,6 +32,7 @@ class MaskLoader(ImageLoader):
 
         return {
             "required": {
+                "reference_image": ("IMAGE",),
                 "source_type": (["local", "url"], {"default": "local"}),
                 "mask_image": (input_files, {"default": "", "image_upload": True}),
             },
@@ -48,7 +49,6 @@ class MaskLoader(ImageLoader):
                     {"default": "alpha_or_luminance"},
                 ),
                 "mask_invert": ("BOOLEAN", {"default": False}),
-                "reference_image": ("IMAGE",),
                 "resize_to_reference": ("BOOLEAN", {"default": True}),
             },
         }
@@ -65,6 +65,7 @@ class MaskLoader(ImageLoader):
 
     def load_mask(
         self,
+        reference_image,
         source_type="local",
         mask_image=None,
         mask_url="",
@@ -76,9 +77,11 @@ class MaskLoader(ImageLoader):
         verify_ssl=True,
         mask_channel="alpha_or_luminance",
         mask_invert=False,
-        reference_image=None,
         resize_to_reference=True,
     ):
+        if reference_image is None:
+            raise ValueError("MeuxMaskLoader 需要连接 reference_image。")
+
         if source_type == "local":
             pil_image = self._load_local_image(mask_image)
         elif source_type == "url":
@@ -100,11 +103,15 @@ class MaskLoader(ImageLoader):
 
         mask_tensor = self._mask_from_image(pil_image, mask_channel)
 
-        if reference_image is not None and resize_to_reference:
-            mask_height, mask_width = mask_tensor.shape[1:3]
-            ref_height, ref_width = reference_image.shape[1:3]
-            if (mask_height, mask_width) != (ref_height, ref_width):
+        mask_height, mask_width = mask_tensor.shape[1:3]
+        ref_height, ref_width = reference_image.shape[1:3]
+        if (mask_height, mask_width) != (ref_height, ref_width):
+            if resize_to_reference:
                 mask_tensor = self._resize_mask(mask_tensor, ref_width, ref_height)
+            else:
+                raise ValueError(
+                    f"遮罩尺寸 {(mask_height, mask_width)} 与 reference_image 尺寸 {(ref_height, ref_width)} 不一致。"
+                )
 
         if mask_invert:
             mask_tensor = 1.0 - mask_tensor
