@@ -3,7 +3,7 @@ from .nodes.multi_save_image import MultiSaveImage
 from .nodes.simple_llm_node import SimpleLLMNode
 from .nodes.advanced_image_crop import AdvancedImageCrop
 from .nodes.image_loader import ImageLoader
-from .nodes.image_mask_loader import ImageMaskLoader
+from .nodes.mask_loader import MaskLoader
 from .nodes.text_area_input import TextAreaInput
 from .nodes.smart_empty_latent import SmartEmptyLatent
 from .nodes.size_preset_safe import SizePresetSafe
@@ -19,7 +19,7 @@ NODE_CLASS_MAPPINGS = {
   "MeuxImageLoader": ImageLoader,
   "MeuxMultiSaveImage": MultiSaveImage,
   "MeuxSimpleLLMNode": SimpleLLMNode,
-  "MeuxImageMaskLoader": ImageMaskLoader,
+  "MeuxMaskLoader": MaskLoader,
   "MeuxAdvancedImageCrop": AdvancedImageCrop,
   "MeuxTextAreaInput": TextAreaInput,
   "MeuxSmartEmptyLatent": SmartEmptyLatent,
@@ -40,7 +40,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxImageLoader": "Meux Image Loader",
   "MeuxMultiSaveImage": "Meux Multi Save Image",
   "MeuxSimpleLLMNode": "Meux LLM API Call",
-  "MeuxImageMaskLoader": "Meux Image + Mask Loader",
+  "MeuxMaskLoader": "Meux Mask Loader",
   "MeuxAdvancedImageCrop": "Meux Advanced Image Crop",
   "MeuxTextAreaInput": "Meux Text Area",
   "MeuxSmartEmptyLatent": "Meux Smart Empty Latent",
