@@ -3,6 +3,7 @@ from .nodes.multi_save_image import MultiSaveImage
 from .nodes.simple_llm_node import SimpleLLMNode
 from .nodes.advanced_image_crop import AdvancedImageCrop
 from .nodes.image_loader import ImageLoader
+from .nodes.mask_loader import MaskLoader
 from .nodes.text_area_input import TextAreaInput
 from .nodes.smart_empty_latent import SmartEmptyLatent
 from .nodes.size_preset_safe import SizePresetSafe
@@ -10,11 +11,15 @@ from .nodes.smart_exact_resize import SmartExactResize
 from .nodes.outpaint_size_preset_safe import OutpaintSizePresetSafe 
 from .nodes.rmbg_birefnet import MeuxRMBG
 from .nodes.realesrgan_upscale import MeuxRealESRGANUpscale
+from .nodes.mask_fill_holes import MeuxMaskFillHoles
+from .nodes.mask_blur_plus import MeuxMaskBlurPlus
+from .nodes.seed_node import MeuxSeed
 
 NODE_CLASS_MAPPINGS = {
   "MeuxImageLoader": ImageLoader,
   "MeuxMultiSaveImage": MultiSaveImage,
   "MeuxSimpleLLMNode": SimpleLLMNode,
+  "MeuxMaskLoader": MaskLoader,
   "MeuxAdvancedImageCrop": AdvancedImageCrop,
   "MeuxTextAreaInput": TextAreaInput,
   "MeuxSmartEmptyLatent": SmartEmptyLatent,
@@ -22,13 +27,20 @@ NODE_CLASS_MAPPINGS = {
   "MeuxSmartExactResize": SmartExactResize,
   "MeuxOutpaintSizePresetSafe": OutpaintSizePresetSafe,
   "MeuxRMBG": MeuxRMBG,
-  "MeuxRealESRGANUpscale": MeuxRealESRGANUpscale
+  "MeuxRealESRGANUpscale": MeuxRealESRGANUpscale,
+  "MeuxMaskFillHoles": MeuxMaskFillHoles,
+  "MeuxMaskBlurPlus": MeuxMaskBlurPlus,
+  "MeuxSeed": MeuxSeed,
+  "Mask Fill Holes": MeuxMaskFillHoles,
+  "MaskBlur+": MeuxMaskBlurPlus,
+  "Seed": MeuxSeed,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxImageLoader": "Meux Image Loader",
   "MeuxMultiSaveImage": "Meux Multi Save Image",
   "MeuxSimpleLLMNode": "Meux LLM API Call",
+  "MeuxMaskLoader": "Meux Mask Loader",
   "MeuxAdvancedImageCrop": "Meux Advanced Image Crop",
   "MeuxTextAreaInput": "Meux Text Area",
   "MeuxSmartEmptyLatent": "Meux Smart Empty Latent",
@@ -36,12 +48,18 @@ NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxSmartExactResize": "Meux Smart Exact Resize",
   "MeuxOutpaintSizePresetSafe": "Meux Outpaint Size Preset Node",
   "MeuxRMBG": "Meux RMBG (BiRefNet)",
-  "MeuxRealESRGANUpscale": "Meux ESRGAN Upscale"
+  "MeuxRealESRGANUpscale": "Meux ESRGAN Upscale",
+  "MeuxMaskFillHoles": "Meux Mask Fill Holes",
+  "MeuxMaskBlurPlus": "Meux Mask Blur+",
+  "MeuxSeed": "Meux Seed",
+  "Mask Fill Holes": "Mask Fill Holes",
+  "MaskBlur+": "MaskBlur+",
+  "Seed": "Seed",
 
 }
 
 # 可选：添加版本和作者信息
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __author__ = "fangchangjun"
 
 # 调试信息 - 可以帮助确认导入是否成功

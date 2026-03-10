@@ -1,7 +1,7 @@
 import os
 import sys
 import types
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
 
 import numpy as np
 import torch
@@ -75,7 +75,7 @@ except Exception:
         _IMPORT_ERROR = e
 
 
-_UPSCALER_CACHE: Dict[Tuple[str, str], RealESRGAN] = {}
+_UPSCALER_CACHE: Dict[Tuple[str, str], Any] = {}
 _MODEL_CHOICES_CACHE = None
 
 
@@ -90,6 +90,19 @@ def _get_device() -> str:
     if torch.cuda.is_available():
         return "cuda"
     return "cpu"
+
+
+def _is_oom_error(exc: Exception) -> bool:
+    if isinstance(exc, torch.OutOfMemoryError):
+        return True
+    msg = str(exc).lower()
+    tokens = [
+        "out of memory",
+        "allocation on device",
+        "cuda error: out of memory",
+        "cublas_status_alloc_failed",
+    ]
+    return any(token in msg for token in tokens)
 
 
 def _candidate_model_dirs():
@@ -171,8 +184,16 @@ def _get_upscaler(model_path: str) -> RealESRGAN:
         upscaler.load_weights(model_path, download=False)
     elif _BACKEND == "er":
         class _RealESRGANerWrapper:
+            _TILE_SCHEDULE = (0, 1024, 768, 512, 384, 256, 192, 128, 96, 64)
+
             def __init__(self, model_path: str, device: str):
-                model = RRDBNet(
+                self.model_path = model_path
+                self.device = device
+                self.upsampler = self._build_upsampler(device=device, tile=0, half=(device == "cuda"))
+                self._cpu_upsampler = None
+
+            def _build_model(self):
+                return RRDBNet(
                     num_in_ch=3,
                     num_out_ch=3,
                     num_feat=64,
@@ -180,24 +201,82 @@ def _get_upscaler(model_path: str) -> RealESRGAN:
                     num_grow_ch=32,
                     scale=4,
                 )
-                self.upsampler = RealESRGANer(
+
+            def _build_upsampler(self, device: str, tile: int, half: bool):
+                model = self._build_model()
+                return RealESRGANer(
                     scale=4,
-                    model_path=model_path,
+                    model_path=self.model_path,
                     model=model,
-                    tile=0,
+                    tile=tile,
                     tile_pad=10,
                     pre_pad=0,
-                    half=(device == "cuda"),
+                    half=(half and device == "cuda"),
                     device=device,
                 )
+
+            def _run_with_tile(self, img, tile: int):
+                self.upsampler.tile = tile
+                output, _ = self.upsampler.enhance(img, outscale=1)
+                return output
+
+            def release(self):
+                try:
+                    self.upsampler.model.to(device="cpu")
+                except Exception:
+                    pass
+                self._cpu_upsampler = None
 
             def predict(self, pil_image: Image.Image) -> Image.Image:
                 import cv2
                 img = np.array(pil_image)
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-                output, _ = self.upsampler.enhance(img, outscale=1)
-                output = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
-                return Image.fromarray(output)
+
+                max_side = max(img.shape[0], img.shape[1])
+                tile_schedule = []
+                for tile in self._TILE_SCHEDULE:
+                    if tile == 0:
+                        tile_schedule.append(0)
+                        continue
+                    tile_eff = min(tile, max_side)
+                    if tile_eff >= 64:
+                        tile_schedule.append(tile_eff)
+
+                tile_schedule = list(dict.fromkeys(tile_schedule))
+                last_oom = None
+                for tile in tile_schedule:
+                    try:
+                        output = self._run_with_tile(img, tile=tile)
+                        output = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
+                        return Image.fromarray(output)
+                    except Exception as e:
+                        if not _is_oom_error(e):
+                            raise
+                        last_oom = e
+                        if self.device == "cuda":
+                            torch.cuda.empty_cache()
+                        continue
+
+                if self.device == "cuda":
+                    try:
+                        if self._cpu_upsampler is None:
+                            self._cpu_upsampler = self._build_upsampler(device="cpu", tile=256, half=False)
+                        output, _ = self._cpu_upsampler.enhance(img, outscale=1)
+                        output = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
+                        return Image.fromarray(output)
+                    except Exception as cpu_error:
+                        if last_oom is not None:
+                            raise RuntimeError(
+                                "RealESRGAN 显存不足：已尝试分块推理与 CPU 回退，仍失败。"
+                            ) from cpu_error
+                        raise
+
+                if last_oom is not None:
+                    raise RuntimeError(
+                        "RealESRGAN 显存不足：请减小输入分辨率或切换到 CPU。"
+                    ) from last_oom
+
+                raise RuntimeError("RealESRGAN 推理失败，未返回输出。")
 
         upscaler = _RealESRGANerWrapper(model_path, device)
     else:
@@ -279,7 +358,10 @@ class MeuxRealESRGANUpscale:
 
         if free_gpu_after and _get_device() == "cuda":
             try:
-                upscaler.model.to(device="cpu")
+                if hasattr(upscaler, "release"):
+                    upscaler.release()
+                else:
+                    upscaler.model.to(device="cpu")
             except Exception:
                 pass
             _UPSCALER_CACHE.pop((model_path, "cuda"), None)
