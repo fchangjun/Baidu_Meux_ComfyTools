@@ -14,6 +14,7 @@ from .nodes.realesrgan_upscale import MeuxRealESRGANUpscale
 from .nodes.mask_fill_holes import MeuxMaskFillHoles
 from .nodes.mask_blur_plus import MeuxMaskBlurPlus
 from .nodes.seed_node import MeuxSeed
+from .nodes.artistic_text_preview import MeuxArtisticTextPreview
 
 NODE_CLASS_MAPPINGS = {
   "MeuxImageLoader": ImageLoader,
@@ -31,6 +32,7 @@ NODE_CLASS_MAPPINGS = {
   "MeuxMaskFillHoles": MeuxMaskFillHoles,
   "MeuxMaskBlurPlus": MeuxMaskBlurPlus,
   "MeuxSeed": MeuxSeed,
+  "MeuxArtisticTextPreview": MeuxArtisticTextPreview,
   "Mask Fill Holes": MeuxMaskFillHoles,
   "MaskBlur+": MeuxMaskBlurPlus,
   "Seed": MeuxSeed,
@@ -52,6 +54,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxMaskFillHoles": "Meux Mask Fill Holes",
   "MeuxMaskBlurPlus": "Meux Mask Blur+",
   "MeuxSeed": "Meux Seed",
+  "MeuxArtisticTextPreview": "Meux Artistic Text Preview",
   "Mask Fill Holes": "Mask Fill Holes",
   "MaskBlur+": "MaskBlur+",
   "Seed": "Seed",
