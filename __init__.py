@@ -54,7 +54,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxMaskFillHoles": "Meux Mask Fill Holes",
   "MeuxMaskBlurPlus": "Meux Mask Blur+",
   "MeuxSeed": "Meux Seed",
-  "MeuxArtisticTextPreview": "Meux Artistic Text Preview",
+  "MeuxArtisticTextPreview": "Meux 艺术文字预览",
   "Mask Fill Holes": "Mask Fill Holes",
   "MaskBlur+": "MaskBlur+",
   "Seed": "Seed",

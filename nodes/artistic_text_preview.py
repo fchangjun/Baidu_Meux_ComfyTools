@@ -18,6 +18,15 @@ class MeuxArtisticTextPreview:
     RETURN_NAMES = ("image", "mask")
     FUNCTION = "process"
     _FONT_MAP_CACHE = None
+    _EFFECT_PRESETS = [
+        "none",
+        "soft_shadow",
+        "heavy_shadow",
+        "soft_glow",
+        "neon_glow",
+        "engraved",
+        "shadow_glow",
+    ]
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -36,45 +45,24 @@ class MeuxArtisticTextPreview:
                 "background_color": ("STRING", {"default": "#000000"}),
                 "background_opacity": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "padding_percent": ("FLOAT", {"default": 0.1, "min": 0.0, "max": 0.45, "step": 0.01}),
-            },
-            "optional": {
-                "fill_enabled": ("BOOLEAN", {"default": True}),
                 "fill_type": (["solid", "gradient", "none"], {"default": "solid"}),
-                "fill_color": ("STRING", {"default": "#ff3b30"}),
-                "fill_gradient_color_1": ("STRING", {"default": "#ff3b30"}),
-                "fill_gradient_color_2": ("STRING", {"default": "#ffd84d"}),
-                "fill_gradient_direction": (
+                "fill_color_1": ("STRING", {"default": "#ff3b30"}),
+                "fill_color_2": ("STRING", {"default": "#ffd84d"}),
+                "fill_direction": (
                     ["left_right", "right_left", "top_bottom", "bottom_top", "diagonal", "diagonal_reverse"],
                     {"default": "top_bottom"},
                 ),
-                "outline_enabled": ("BOOLEAN", {"default": False}),
+                "outline_type": (["none", "solid", "gradient"], {"default": "none"}),
                 "outline_width": ("INT", {"default": 6, "min": 0, "max": 128, "step": 1}),
                 "outline_opacity": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "outline_type": (["solid", "gradient"], {"default": "solid"}),
-                "outline_color": ("STRING", {"default": "#ffffff"}),
-                "outline_gradient_color_1": ("STRING", {"default": "#ffffff"}),
-                "outline_gradient_color_2": ("STRING", {"default": "#00d4ff"}),
-                "outline_gradient_direction": (
+                "outline_color_1": ("STRING", {"default": "#ffffff"}),
+                "outline_color_2": ("STRING", {"default": "#00d4ff"}),
+                "outline_direction": (
                     ["left_right", "right_left", "top_bottom", "bottom_top", "diagonal", "diagonal_reverse"],
                     {"default": "left_right"},
                 ),
-                "shadow_enabled": ("BOOLEAN", {"default": False}),
-                "shadow_color": ("STRING", {"default": "#000000"}),
-                "shadow_opacity": ("FLOAT", {"default": 0.6, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "shadow_offset_x": ("INT", {"default": 8, "min": -256, "max": 256, "step": 1}),
-                "shadow_offset_y": ("INT", {"default": 8, "min": -256, "max": 256, "step": 1}),
-                "shadow_blur": ("FLOAT", {"default": 6.0, "min": 0.0, "max": 128.0, "step": 0.5}),
-                "inner_shadow_enabled": ("BOOLEAN", {"default": False}),
-                "inner_shadow_color": ("STRING", {"default": "#000000"}),
-                "inner_shadow_opacity": ("FLOAT", {"default": 0.4, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "inner_shadow_offset_x": ("INT", {"default": 3, "min": -128, "max": 128, "step": 1}),
-                "inner_shadow_offset_y": ("INT", {"default": 3, "min": -128, "max": 128, "step": 1}),
-                "inner_shadow_blur": ("FLOAT", {"default": 4.0, "min": 0.0, "max": 128.0, "step": 0.5}),
-                "glow_enabled": ("BOOLEAN", {"default": False}),
-                "glow_color": ("STRING", {"default": "#00d4ff"}),
-                "glow_opacity": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "glow_blur": ("FLOAT", {"default": 12.0, "min": 0.0, "max": 128.0, "step": 0.5}),
-                "glow_intensity": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 3.0, "step": 0.05}),
+                "effect_preset": (cls._EFFECT_PRESETS, {"default": "none"}),
+                "effect_strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 3.0, "step": 0.05}),
             },
         }
 
@@ -92,41 +80,23 @@ class MeuxArtisticTextPreview:
         background_color,
         background_opacity,
         padding_percent,
-        fill_enabled=True,
         fill_type="solid",
-        fill_color="#ff3b30",
-        fill_gradient_color_1="#ff3b30",
-        fill_gradient_color_2="#ffd84d",
-        fill_gradient_direction="top_bottom",
-        outline_enabled=False,
+        fill_color_1="#ff3b30",
+        fill_color_2="#ffd84d",
+        fill_direction="top_bottom",
+        outline_type="none",
         outline_width=6,
         outline_opacity=1.0,
-        outline_type="solid",
-        outline_color="#ffffff",
-        outline_gradient_color_1="#ffffff",
-        outline_gradient_color_2="#00d4ff",
-        outline_gradient_direction="left_right",
-        shadow_enabled=False,
-        shadow_color="#000000",
-        shadow_opacity=0.6,
-        shadow_offset_x=8,
-        shadow_offset_y=8,
-        shadow_blur=6.0,
-        inner_shadow_enabled=False,
-        inner_shadow_color="#000000",
-        inner_shadow_opacity=0.4,
-        inner_shadow_offset_x=3,
-        inner_shadow_offset_y=3,
-        inner_shadow_blur=4.0,
-        glow_enabled=False,
-        glow_color="#00d4ff",
-        glow_opacity=0.5,
-        glow_blur=12.0,
-        glow_intensity=1.0,
+        outline_color_1="#ffffff",
+        outline_color_2="#00d4ff",
+        outline_direction="left_right",
+        effect_preset="none",
+        effect_strength=1.0,
     ):
         safe_area = self._safe_area(width, height, padding_percent)
         font_path, fake_bold, fake_italic = self._choose_font_file(font_name, bold, italic)
         font = self._load_font(font_path, font_size)
+        effect_settings = self._effect_settings(effect_preset, effect_strength)
 
         if font_size_mode == "fit":
             fitted_size = self._find_optimal_font_size(text, font_path, safe_area, char_spacing, font_size)
@@ -149,37 +119,17 @@ class MeuxArtisticTextPreview:
             text_mask=text_mask,
             width=width,
             height=height,
-            fill_enabled=fill_enabled,
             fill_type=fill_type,
-            fill_color=fill_color,
-            fill_gradient_color_1=fill_gradient_color_1,
-            fill_gradient_color_2=fill_gradient_color_2,
-            fill_gradient_direction=fill_gradient_direction,
-            outline_enabled=outline_enabled,
+            fill_color_1=fill_color_1,
+            fill_color_2=fill_color_2,
+            fill_direction=fill_direction,
             outline_width=outline_width,
             outline_opacity=outline_opacity,
             outline_type=outline_type,
-            outline_color=outline_color,
-            outline_gradient_color_1=outline_gradient_color_1,
-            outline_gradient_color_2=outline_gradient_color_2,
-            outline_gradient_direction=outline_gradient_direction,
-            shadow_enabled=shadow_enabled,
-            shadow_color=shadow_color,
-            shadow_opacity=shadow_opacity,
-            shadow_offset_x=shadow_offset_x,
-            shadow_offset_y=shadow_offset_y,
-            shadow_blur=shadow_blur,
-            inner_shadow_enabled=inner_shadow_enabled,
-            inner_shadow_color=inner_shadow_color,
-            inner_shadow_opacity=inner_shadow_opacity,
-            inner_shadow_offset_x=inner_shadow_offset_x,
-            inner_shadow_offset_y=inner_shadow_offset_y,
-            inner_shadow_blur=inner_shadow_blur,
-            glow_enabled=glow_enabled,
-            glow_color=glow_color,
-            glow_opacity=glow_opacity,
-            glow_blur=glow_blur,
-            glow_intensity=glow_intensity,
+            outline_color_1=outline_color_1,
+            outline_color_2=outline_color_2,
+            outline_direction=outline_direction,
+            effect_settings=effect_settings,
         )
 
         background = Image.new("RGBA", (width, height), self._hex_to_rgba(background_color, int(background_opacity * 255)))
@@ -376,57 +326,48 @@ class MeuxArtisticTextPreview:
         text_mask,
         width,
         height,
-        fill_enabled,
         fill_type,
-        fill_color,
-        fill_gradient_color_1,
-        fill_gradient_color_2,
-        fill_gradient_direction,
-        outline_enabled,
+        fill_color_1,
+        fill_color_2,
+        fill_direction,
         outline_width,
         outline_opacity,
         outline_type,
-        outline_color,
-        outline_gradient_color_1,
-        outline_gradient_color_2,
-        outline_gradient_direction,
-        shadow_enabled,
-        shadow_color,
-        shadow_opacity,
-        shadow_offset_x,
-        shadow_offset_y,
-        shadow_blur,
-        inner_shadow_enabled,
-        inner_shadow_color,
-        inner_shadow_opacity,
-        inner_shadow_offset_x,
-        inner_shadow_offset_y,
-        inner_shadow_blur,
-        glow_enabled,
-        glow_color,
-        glow_opacity,
-        glow_blur,
-        glow_intensity,
+        outline_color_1,
+        outline_color_2,
+        outline_direction,
+        effect_settings,
     ):
         result = Image.new("RGBA", (width, height), (0, 0, 0, 0))
 
-        if shadow_enabled and shadow_opacity > 0:
+        if effect_settings["shadow_enabled"] and effect_settings["shadow_opacity"] > 0:
             shadow_layer = self._make_shadow_layer(
-                text_mask, shadow_color, shadow_opacity, shadow_offset_x, shadow_offset_y, shadow_blur
+                text_mask,
+                effect_settings["shadow_color"],
+                effect_settings["shadow_opacity"],
+                effect_settings["shadow_offset_x"],
+                effect_settings["shadow_offset_y"],
+                effect_settings["shadow_blur"],
             )
             result = Image.alpha_composite(result, shadow_layer)
 
-        if glow_enabled and glow_opacity > 0:
-            glow_layer = self._make_glow_layer(text_mask, glow_color, glow_opacity, glow_blur, glow_intensity)
+        if effect_settings["glow_enabled"] and effect_settings["glow_opacity"] > 0:
+            glow_layer = self._make_glow_layer(
+                text_mask,
+                effect_settings["glow_color"],
+                effect_settings["glow_opacity"],
+                effect_settings["glow_blur"],
+                effect_settings["glow_intensity"],
+            )
             result = Image.alpha_composite(result, glow_layer)
 
-        if fill_enabled and fill_type != "none":
+        if fill_type != "none":
             fill_layer = self._make_fill_layer(
-                text_mask, width, height, fill_type, fill_color, fill_gradient_color_1, fill_gradient_color_2, fill_gradient_direction
+                text_mask, width, height, fill_type, fill_color_1, fill_color_1, fill_color_2, fill_direction
             )
             result = Image.alpha_composite(result, fill_layer)
 
-        if outline_enabled and outline_width > 0 and outline_opacity > 0:
+        if outline_type != "none" and outline_width > 0 and outline_opacity > 0:
             outline_layer = self._make_outline_layer(
                 text_mask,
                 width,
@@ -434,25 +375,98 @@ class MeuxArtisticTextPreview:
                 outline_width,
                 outline_opacity,
                 outline_type,
-                outline_color,
-                outline_gradient_color_1,
-                outline_gradient_color_2,
-                outline_gradient_direction,
+                outline_color_1,
+                outline_color_1,
+                outline_color_2,
+                outline_direction,
             )
             result = Image.alpha_composite(result, outline_layer)
 
-        if inner_shadow_enabled and inner_shadow_opacity > 0:
+        if effect_settings["inner_shadow_enabled"] and effect_settings["inner_shadow_opacity"] > 0:
             inner_shadow_layer = self._make_inner_shadow_layer(
                 text_mask,
-                inner_shadow_color,
-                inner_shadow_opacity,
-                inner_shadow_offset_x,
-                inner_shadow_offset_y,
-                inner_shadow_blur,
+                effect_settings["inner_shadow_color"],
+                effect_settings["inner_shadow_opacity"],
+                effect_settings["inner_shadow_offset_x"],
+                effect_settings["inner_shadow_offset_y"],
+                effect_settings["inner_shadow_blur"],
             )
             result = Image.alpha_composite(result, inner_shadow_layer)
 
         return result
+
+    def _effect_settings(self, preset, strength):
+        scale = max(0.0, float(strength))
+        base = {
+            "shadow_enabled": False,
+            "shadow_color": "#000000",
+            "shadow_opacity": 0.0,
+            "shadow_offset_x": 0,
+            "shadow_offset_y": 0,
+            "shadow_blur": 0.0,
+            "inner_shadow_enabled": False,
+            "inner_shadow_color": "#000000",
+            "inner_shadow_opacity": 0.0,
+            "inner_shadow_offset_x": 0,
+            "inner_shadow_offset_y": 0,
+            "inner_shadow_blur": 0.0,
+            "glow_enabled": False,
+            "glow_color": "#00d4ff",
+            "glow_opacity": 0.0,
+            "glow_blur": 0.0,
+            "glow_intensity": 1.0,
+        }
+        if preset == "soft_shadow":
+            base.update({
+                "shadow_enabled": True,
+                "shadow_opacity": min(1.0, 0.35 * scale),
+                "shadow_offset_x": int(round(4 * scale)),
+                "shadow_offset_y": int(round(4 * scale)),
+                "shadow_blur": max(0.0, 6.0 * scale),
+            })
+        elif preset == "heavy_shadow":
+            base.update({
+                "shadow_enabled": True,
+                "shadow_opacity": min(1.0, 0.6 * scale),
+                "shadow_offset_x": int(round(8 * scale)),
+                "shadow_offset_y": int(round(8 * scale)),
+                "shadow_blur": max(0.0, 10.0 * scale),
+            })
+        elif preset == "soft_glow":
+            base.update({
+                "glow_enabled": True,
+                "glow_opacity": min(1.0, 0.35 * scale),
+                "glow_blur": max(0.1, 10.0 * scale),
+                "glow_intensity": max(0.1, 1.0 * scale),
+            })
+        elif preset == "neon_glow":
+            base.update({
+                "glow_enabled": True,
+                "glow_opacity": min(1.0, 0.55 * scale),
+                "glow_blur": max(0.1, 14.0 * scale),
+                "glow_intensity": max(0.1, 1.6 * scale),
+            })
+        elif preset == "engraved":
+            base.update({
+                "inner_shadow_enabled": True,
+                "inner_shadow_opacity": min(1.0, 0.55 * scale),
+                "inner_shadow_offset_x": int(round(2 * scale)),
+                "inner_shadow_offset_y": int(round(2 * scale)),
+                "inner_shadow_blur": max(0.1, 4.0 * scale),
+            })
+        elif preset == "shadow_glow":
+            base.update({
+                "shadow_enabled": True,
+                "shadow_opacity": min(1.0, 0.4 * scale),
+                "shadow_offset_x": int(round(5 * scale)),
+                "shadow_offset_y": int(round(5 * scale)),
+                "shadow_blur": max(0.1, 7.0 * scale),
+                "glow_enabled": True,
+                "glow_opacity": min(1.0, 0.3 * scale),
+                "glow_blur": max(0.1, 10.0 * scale),
+                "glow_intensity": max(0.1, 1.2 * scale),
+            })
+        return base
 
     def _make_shadow_layer(self, text_mask, color, opacity, offset_x, offset_y, blur):
         shadow_mask = text_mask
