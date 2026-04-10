@@ -54,7 +54,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
   "MeuxMaskFillHoles": "Meux Mask Fill Holes",
   "MeuxMaskBlurPlus": "Meux Mask Blur+",
   "MeuxSeed": "Meux Seed",
-  "MeuxArtisticTextPreview": "Meux 艺术文字预览",
+  "MeuxArtisticTextPreview": "Meux Artistic Text Preview",
   "Mask Fill Holes": "Mask Fill Holes",
   "MaskBlur+": "MaskBlur+",
   "Seed": "Seed",
@@ -62,7 +62,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 }
 
 # 可选：添加版本和作者信息
-__version__ = "1.6.0"
+__version__ = "1.7.0"
 __author__ = "fangchangjun"
 
 # 调试信息 - 可以帮助确认导入是否成功
