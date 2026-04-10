@@ -63,6 +63,12 @@ class MeuxArtisticTextPreview:
                 ),
                 "effect_preset": (cls._EFFECT_PRESETS, {"default": "none"}),
                 "effect_strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 3.0, "step": 0.05}),
+                "shadow_mode": (["preset", "custom"], {"default": "preset"}),
+                "shadow_color": ("STRING", {"default": "#000000"}),
+                "shadow_offset_x": ("INT", {"default": 4, "min": -512, "max": 512, "step": 1}),
+                "shadow_offset_y": ("INT", {"default": 4, "min": -512, "max": 512, "step": 1}),
+                "shadow_opacity": ("FLOAT", {"default": 0.35, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "shadow_blur": ("FLOAT", {"default": 6.0, "min": 0.0, "max": 128.0, "step": 0.1}),
             },
         }
 
@@ -92,11 +98,26 @@ class MeuxArtisticTextPreview:
         outline_direction="left_right",
         effect_preset="none",
         effect_strength=1.0,
+        shadow_mode="preset",
+        shadow_color="#000000",
+        shadow_offset_x=4,
+        shadow_offset_y=4,
+        shadow_opacity=0.35,
+        shadow_blur=6.0,
     ):
         safe_area = self._safe_area(width, height, padding_percent)
         font_path, fake_bold, fake_italic = self._choose_font_file(font_name, bold, italic)
         font = self._load_font(font_path, font_size)
         effect_settings = self._effect_settings(effect_preset, effect_strength)
+        effect_settings = self._resolve_shadow_settings(
+            effect_settings=effect_settings,
+            shadow_mode=shadow_mode,
+            shadow_color=shadow_color,
+            shadow_offset_x=shadow_offset_x,
+            shadow_offset_y=shadow_offset_y,
+            shadow_opacity=shadow_opacity,
+            shadow_blur=shadow_blur,
+        )
 
         if font_size_mode == "fit":
             fitted_size = self._find_optimal_font_size(text, font_path, safe_area, char_spacing, font_size)
@@ -467,6 +488,29 @@ class MeuxArtisticTextPreview:
                 "glow_intensity": max(0.1, 1.2 * scale),
             })
         return base
+
+    def _resolve_shadow_settings(
+        self,
+        effect_settings,
+        shadow_mode,
+        shadow_color,
+        shadow_offset_x,
+        shadow_offset_y,
+        shadow_opacity,
+        shadow_blur,
+    ):
+        settings = dict(effect_settings)
+        settings["shadow_color"] = shadow_color
+        if shadow_mode == "custom":
+            settings.update({
+                "shadow_enabled": shadow_opacity > 0,
+                "shadow_color": shadow_color,
+                "shadow_opacity": max(0.0, min(1.0, float(shadow_opacity))),
+                "shadow_offset_x": int(shadow_offset_x),
+                "shadow_offset_y": int(shadow_offset_y),
+                "shadow_blur": max(0.0, float(shadow_blur)),
+            })
+        return settings
 
     def _make_shadow_layer(self, text_mask, color, opacity, offset_x, offset_y, blur):
         shadow_mask = text_mask
