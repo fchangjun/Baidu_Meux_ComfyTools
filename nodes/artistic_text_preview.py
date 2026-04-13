@@ -40,6 +40,7 @@ class MeuxArtisticTextPreview:
                 "font_size_mode": (["fixed", "fit"], {"default": "fixed"}),
                 "font_size": ("INT", {"default": 128, "min": 8, "max": 1024, "step": 1}),
                 "char_spacing": ("INT", {"default": 0, "min": -20, "max": 200, "step": 1}),
+                "line_spacing": ("INT", {"default": 0, "min": 0, "max": 512, "step": 1}),
                 "bold": ("BOOLEAN", {"default": False}),
                 "italic": ("BOOLEAN", {"default": False}),
                 "background_color": ("STRING", {"default": "#000000"}),
@@ -81,6 +82,7 @@ class MeuxArtisticTextPreview:
         font_size_mode,
         font_size,
         char_spacing,
+        line_spacing,
         bold,
         italic,
         background_color,
@@ -120,7 +122,7 @@ class MeuxArtisticTextPreview:
         )
 
         if font_size_mode == "fit":
-            fitted_size = self._find_optimal_font_size(text, font_path, safe_area, char_spacing, font_size)
+            fitted_size = self._find_optimal_font_size(text, font_path, safe_area, char_spacing, line_spacing, font_size)
             font = self._load_font(font_path, fitted_size)
 
         text_mask = self._render_text_mask(
@@ -129,6 +131,7 @@ class MeuxArtisticTextPreview:
             height=height,
             font=font,
             char_spacing=char_spacing,
+            line_spacing=line_spacing,
             safe_area=safe_area,
             fake_bold=fake_bold,
         )
@@ -246,7 +249,7 @@ class MeuxArtisticTextPreview:
         pad_y = int(height * padding_percent)
         return (pad_x, pad_y, width - pad_x, height - pad_y)
 
-    def _find_optimal_font_size(self, text, font_path, safe_area, char_spacing, max_size):
+    def _find_optimal_font_size(self, text, font_path, safe_area, char_spacing, line_spacing, max_size):
         left, top, right, bottom = safe_area
         max_width = max(1, right - left)
         max_height = max(1, bottom - top)
@@ -257,7 +260,8 @@ class MeuxArtisticTextPreview:
         while low <= high:
             mid = (low + high) // 2
             font = self._load_font(font_path, mid)
-            width, height = self._text_block_size(font, text, char_spacing, max(6, mid // 5))
+            resolved_line_spacing = self._resolve_line_spacing(font, line_spacing)
+            width, height = self._text_block_size(font, text, char_spacing, resolved_line_spacing)
             if width <= max_width and height <= max_height:
                 best = mid
                 low = mid + 1
@@ -290,11 +294,16 @@ class MeuxArtisticTextPreview:
         height = len(lines) * line_height + max(0, len(lines) - 1) * line_spacing
         return width, height
 
-    def _render_text_mask(self, text, width, height, font, char_spacing, safe_area, fake_bold):
+    def _resolve_line_spacing(self, font, line_spacing):
+        if int(line_spacing) > 0:
+            return int(line_spacing)
+        return max(6, font.size // 5 if hasattr(font, "size") else 6)
+
+    def _render_text_mask(self, text, width, height, font, char_spacing, line_spacing, safe_area, fake_bold):
         mask_image = Image.new("L", (width, height), 0)
         draw = ImageDraw.Draw(mask_image)
 
-        line_spacing = max(6, font.size // 5 if hasattr(font, "size") else 6)
+        line_spacing = self._resolve_line_spacing(font, line_spacing)
         block_width, block_height = self._text_block_size(font, text, char_spacing, line_spacing)
 
         left, top, right, bottom = safe_area
