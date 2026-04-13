@@ -40,7 +40,7 @@ class MeuxArtisticTextPreview:
                 "font_size_mode": (["fixed", "fit"], {"default": "fixed"}),
                 "font_size": ("INT", {"default": 128, "min": 8, "max": 1024, "step": 1}),
                 "char_spacing": ("INT", {"default": 0, "min": -20, "max": 200, "step": 1}),
-                "line_spacing": ("INT", {"default": 0, "min": 0, "max": 512, "step": 1}),
+                "line_spacing": ("INT", {"default": 0, "min": -512, "max": 512, "step": 1}),
                 "bold": ("BOOLEAN", {"default": False}),
                 "italic": ("BOOLEAN", {"default": False}),
                 "background_color": ("STRING", {"default": "#000000"}),
@@ -295,7 +295,7 @@ class MeuxArtisticTextPreview:
         return width, height
 
     def _resolve_line_spacing(self, font, line_spacing):
-        if int(line_spacing) > 0:
+        if int(line_spacing) != 0:
             return int(line_spacing)
         return max(6, font.size // 5 if hasattr(font, "size") else 6)
 
