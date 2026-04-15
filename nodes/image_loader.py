@@ -17,6 +17,8 @@ class ImageLoader:
     Hybrid image loader that mirrors ComfyUI's Load Image node while adding URL download support.
     """
 
+    URL_DOWNLOAD_SUBDIR = "meux_downloads"
+
     RETURN_TYPES = ("IMAGE", "MASK")
     RETURN_NAMES = ("image", "mask")
     FUNCTION = "load_image"
@@ -180,24 +182,21 @@ class ImageLoader:
         return mask
 
     def _persist_image(self, image: Image.Image, filename_hint: str, url: str, overwrite: bool):
-        try:
-            input_dir = folder_paths.get_input_directory()
-        except KeyError:
-            raise ValueError("未检测到 ComfyUI 的 input 目录，请在根目录创建 input 文件夹后重启。")
-
+        input_dir = self._get_input_directory()
+        persist_dir = self._get_url_persist_directory(create=True)
         extension = self._infer_extension(image, url)
-        filename = self._build_filename(filename_hint or os.path.basename(urlparse(url).path), extension, url)
-        full_path = os.path.abspath(os.path.join(input_dir, filename))
-        input_dir_abs = os.path.abspath(input_dir)
-        if not (full_path.startswith(input_dir_abs + os.sep) or full_path == input_dir_abs):
-            raise ValueError("无法写入到 input 目录之外。")
+        filename = self._build_cached_filename(filename_hint, extension, url)
+        full_path = os.path.abspath(os.path.join(persist_dir, filename))
+        persist_dir_abs = os.path.abspath(persist_dir)
+        if not (full_path.startswith(persist_dir_abs + os.sep) or full_path == persist_dir_abs):
+            raise ValueError("无法写入到 URL 下载缓存目录之外。")
 
         if os.path.exists(full_path) and not overwrite:
             stem, ext = os.path.splitext(filename)
             counter = 1
             while True:
                 candidate = f"{stem}_{counter}{ext}"
-                candidate_path = os.path.join(input_dir, candidate)
+                candidate_path = os.path.join(persist_dir, candidate)
                 if not os.path.exists(candidate_path):
                     full_path = candidate_path
                     break
@@ -210,19 +209,31 @@ class ImageLoader:
         else:
             image.save(full_path)
         print(f"[MeuxImageLoader] 已保存到 {os.path.relpath(full_path, input_dir)}")
+        return full_path
 
-    def _build_filename(self, hint: str, extension: str, url: str) -> str:
-        sanitized = self._sanitize_filename(hint) if hint else ""
-        if sanitized.endswith(extension):
-            base = sanitized[: -len(extension)]
-        else:
-            base = sanitized or ""
+    def _build_cached_filename(self, filename_hint: str, extension: str, url: str) -> str:
+        digest = hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]
+        path_name = os.path.basename(urlparse(url).path)
+        label_source = filename_hint or path_name or ""
+        label = self._sanitize_filename(label_source)
+        if label.endswith(extension):
+            label = label[: -len(extension)]
+        if label:
+            return f"meux_url_{digest}__{label}{extension}"
+        return f"meux_url_{digest}{extension}"
 
-        if not base:
-            digest = hashlib.sha1(url.encode("utf-8")).hexdigest()[:12]
-            base = f"meux_url_{digest}"
+    def _get_input_directory(self) -> str:
+        try:
+            return folder_paths.get_input_directory()
+        except KeyError:
+            raise ValueError("未检测到 ComfyUI 的 input 目录，请在根目录创建 input 文件夹后重启。")
 
-        return f"{base}{extension}"
+    def _get_url_persist_directory(self, create: bool) -> str:
+        input_dir = self._get_input_directory()
+        persist_dir = os.path.join(input_dir, self.URL_DOWNLOAD_SUBDIR)
+        if create:
+            os.makedirs(persist_dir, exist_ok=True)
+        return persist_dir
 
     def _infer_extension(self, image: Image.Image, url: str) -> str:
         parsed = urlparse(url)

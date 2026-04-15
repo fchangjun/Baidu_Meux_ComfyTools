@@ -41,6 +41,8 @@ class MeuxArtisticTextPreview:
                 "font_size": ("INT", {"default": 128, "min": 8, "max": 1024, "step": 1}),
                 "char_spacing": ("INT", {"default": 0, "min": -20, "max": 200, "step": 1}),
                 "line_spacing": ("INT", {"default": 0, "min": -512, "max": 512, "step": 1}),
+                "text_align": (["left", "center", "right"], {"default": "center"}),
+                "vertical_align": (["top", "middle", "bottom"], {"default": "middle"}),
                 "bold": ("BOOLEAN", {"default": False}),
                 "italic": ("BOOLEAN", {"default": False}),
                 "background_color": ("STRING", {"default": "#000000"}),
@@ -83,6 +85,8 @@ class MeuxArtisticTextPreview:
         font_size,
         char_spacing,
         line_spacing,
+        text_align,
+        vertical_align,
         bold,
         italic,
         background_color,
@@ -132,6 +136,8 @@ class MeuxArtisticTextPreview:
             font=font,
             char_spacing=char_spacing,
             line_spacing=line_spacing,
+            text_align=text_align,
+            vertical_align=vertical_align,
             safe_area=safe_area,
             fake_bold=fake_bold,
         )
@@ -299,18 +305,17 @@ class MeuxArtisticTextPreview:
             return int(line_spacing)
         return max(6, font.size // 5 if hasattr(font, "size") else 6)
 
-    def _render_text_mask(self, text, width, height, font, char_spacing, line_spacing, safe_area, fake_bold):
+    def _render_text_mask(
+        self, text, width, height, font, char_spacing, line_spacing, text_align, vertical_align, safe_area, fake_bold
+    ):
         mask_image = Image.new("L", (width, height), 0)
         draw = ImageDraw.Draw(mask_image)
 
         line_spacing = self._resolve_line_spacing(font, line_spacing)
-        block_width, block_height = self._text_block_size(font, text, char_spacing, line_spacing)
+        _, block_height = self._text_block_size(font, text, char_spacing, line_spacing)
 
         left, top, right, bottom = safe_area
-        safe_width = right - left
-        safe_height = bottom - top
-        start_x = left + (safe_width - block_width) / 2
-        start_y = top + (safe_height - block_height) / 2
+        start_y = self._block_start_y(block_height, vertical_align, top, bottom)
 
         offsets = ((0, 0), (1, 0), (0, 1), (1, 1)) if fake_bold else ((0, 0),)
         lines = text.splitlines() or [text]
@@ -319,7 +324,8 @@ class MeuxArtisticTextPreview:
         current_y = start_y
 
         for line in lines:
-            current_x = start_x
+            line_width = self._line_width(font, line, char_spacing)
+            current_x = self._line_start_x(line_width, text_align, left, right)
             for index, char in enumerate(line):
                 for dx, dy in offsets:
                     draw.text((current_x + dx, current_y + dy), char, fill=255, font=font)
@@ -329,6 +335,22 @@ class MeuxArtisticTextPreview:
             current_y += line_height + line_spacing
 
         return mask_image
+
+    def _line_start_x(self, line_width, text_align, left, right):
+        safe_width = right - left
+        if text_align == "left":
+            return left
+        if text_align == "right":
+            return right - line_width
+        return left + (safe_width - line_width) / 2
+
+    def _block_start_y(self, block_height, vertical_align, top, bottom):
+        safe_height = bottom - top
+        if vertical_align == "top":
+            return top
+        if vertical_align == "bottom":
+            return bottom - block_height
+        return top + (safe_height - block_height) / 2
 
     def _apply_fake_italic(self, mask_image, shear=0.25):
         bbox = mask_image.getbbox()
